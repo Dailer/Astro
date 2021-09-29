@@ -290,12 +290,14 @@ medbin=function(x, y, nbin='hist', method='length', err.type='ci', min.cts=1, pl
     m=unlist(lapply(ly, median, na.rm=T))
     e=unlist(lapply(ly, qf))
     lw=m-e; up=m+e
+    cname='median'
   }
   if(err.type=='ci'){
     require(Rmisc)
     cif=function(x) return(CI(c(na.omit(x)), .95))
     me=data.frame(do.call(rbind, lapply(ly, cif)))
     m=me$mean; lw=me$lower; up=me$upper
+    cname='mean'
     #print(me)
   }
   if(length(m)!=nbin){
@@ -303,6 +305,7 @@ medbin=function(x, y, nbin='hist', method='length', err.type='ci', min.cts=1, pl
     warning(nbin-length(n),' bins ommited')
   } 
   d=data.frame(bin=bc, mean=m, lower=lw, upper=up, N=ncts)
+  colnames(d)[2]=cname
   d=na.omit(d)
   d=subset(d, !is.infinite(bin))
   d=subset(d, N>=min.cts)
@@ -330,7 +333,7 @@ medbin=function(x, y, nbin='hist', method='length', err.type='ci', min.cts=1, pl
       d$lower=s_lower
       d$upper=s_upper
     }else{
-      points(d$bin, d$mean, type='b', col=col, ...)
+      points(d$bin, d[,2], type='b', col=col, ...)
       arrows(d$bin, d$lower, d$bin, d$upper, length=.05, code=3, angle=90, col=col, ...)
     }
   }
@@ -1291,8 +1294,9 @@ varbin=function(x, y, plot=T, labs=c('x','y'), col=1){
 }
 
 # Function to convert arcsec to kpc
-asec2kpc=function(asec, z, omega.m=0.27, omega.lambda=0.73, H.0=71){
-  da=cosmoFns::D.A(z, omega.m, omega.lambda, H.0)
+asec2kpc=function(asec, z, Om=0.27, Ol=1-Om, H0=71){
+  require(cosmoFns)
+  da=D.A(z, Om, Ol, H0)
   da2arcsec=asec*da/(180*3600/pi/1000)
   return(da2arcsec)
 }
@@ -1625,6 +1629,70 @@ absmag2=function(z, mag=17.77, evo=1.6*(z-0.1), OM=0.27, OL=1-OM, H0=71){
   return(mag-DistMod)
 }
 
+# Kruskal-Wallis multicomparison test, taken from the pgirmess package
+kruskalmc=function(resp, data=NULL, probs=0.05, cont=NULL){
+  mf=model.frame(resp,data)
+  resp=mf[,1]
+  categ=mf[,2]
+  db=na.omit(data.frame(resp,categ))
+  if(nrow(db)!=length(resp)) 
+    warning(paste(length(resp)-nrow(db),"lines including NA have been omitted"))
+  resp=db[,1]
+  categ=db[,2]
+  lst=split(rank(resp), categ)
+  name=names(lst)
+  R=sapply(lst, mean)
+  n=sapply(lst, length)
+  N=length(resp)
+  dif=abs(outer(R, R, "-"))
+  if(is.null(cont)) {
+    difv=vname=indices=NULL
+    for(i in 1:(length(name)-1)){
+      for(j in (i+1):length(name)) {
+        vname=c(vname, paste(name[i], "-", name[j], sep = ""))
+        indices=rbind(indices, c(i, j))
+        difv=c(difv,dif[i,j])
+      }
+    }
+    names(difv)=vname
+    z=qnorm(probs/(length(lst)*(length(lst)-1)), lower.tail=F)
+    lims=z*sqrt((N*(N+1)/12)*(1/n[indices[1:length(vname),1]]+1/n[indices[1:length(vname),2]]))
+    names(lims)=vname
+    stat="Multiple comparison test after Kruskal-Wallis"
+  }else{
+    vname=indices=NULL
+    for(j in 2:length(dif[1, ])){
+      vname=c(vname, paste(name[1], "-", name[j], sep = ""))
+      indices=rbind(indices, c(1, j))
+    }
+    dif=dif[1, 2:length(dif[1, ])]
+    names(dif)=vname
+    difv=dif
+    choice=pmatch(cont, c("two-tailed","one-tailed"), nomatch=3)
+    if(choice==1) {
+      z=qnorm(probs/(2*(length(lst)-1)), lower.tail=F)
+      lims=z*sqrt((N*(N + 1))/12*(1/n[indices[1:length(vname), 1]]+
+                                    1/n[indices[1:length(vname), 2]]))
+      names(lims)=vname
+      stat="Multiple comparison test after Kruskal-Wallis, treatments vs control (two-tailed)"
+    }
+    if(choice==2){
+      z=qnorm(probs/(length(lst)-1), lower.tail=F)
+      lims=z*sqrt((N*(N+1)/12)*(1/n[indices[1:length(vname), 1]]+
+                                  1/n[indices[1:length(vname), 2]]))
+      names(lims)=vname
+      stat="Multiple comparison test after Kruskal-Wallis, treatment vs control (one-tailed)"
+    }
+    if(choice==3) 
+      stop("Values must be 'one-tailed' or 'two-tailed', partial matching accepted")
+  }
+  output=list(statistic=stat, signif.level=probs, 
+              dif.com=data.frame(obs.dif=difv, critical.dif=lims, 
+                                 difference=ifelse((difv-lims)>0, TRUE, FALSE)))
+  class(output)=c("mc", "list")
+  output
+}
+
 # Geometric histogram separation from Sutter & Barchi (2017)
 ghs=function(x1, x2, plot=T){
   h1=hist(x1, plot = F)
@@ -1654,7 +1722,7 @@ ghs=function(x1, x2, plot=T){
   return(ghs)
 }
 
-# Kruskal-Wallis multicomparison test
+# Kruskal-Wallis multicomparison test for multiple properties
 kw=function(data, class, probs=0.05, plot=T, ...){
   #print(call)
   require(pgirmess)
@@ -1760,7 +1828,7 @@ mc=function(data, class, plot=T){
   t2=t(err); colnames(t2)=paste0('error.',colnames(t2))
   m=as.matrix(t(m)); colnames(m)=paste0('comp.',rn)
   tme=data.frame(t1, t2)
-  st=data.frame(matrix(paste(t1, t2, sep='±'), nrow(t1), ncol(t1)))
+  st=data.frame(matrix(paste(t1, t2, sep='Â±'), nrow(t1), ncol(t1)))
   dimnames(st)=list(rownames(t1), rownames(med))
   return(list(values=tme, intraclass_comparison=m, string=st))
 }
@@ -1774,7 +1842,7 @@ kwdm=function(data, class, probs=0.05, names=NULL, plot=T, sortnames=T, ...){
   m=medist(data, class, plot=F)
   me=mc(data, class, plot=F)
   #cn=colnames(data)
-  rn=gsub('-','×',k$comp)
+  rn=gsub('-','Ã—',k$comp)
   n=ncol(data); l=length(rn)
   tk=t(as.matrix(k[l:1,-1]))
   g=expand.grid(1:n,1:l)
@@ -1807,7 +1875,7 @@ plot.kw=function(x, rows='all', sortnames=F){
     m=m[rows,]
     me[[2]]=me[[2]][,rows]
   }
-  rn=gsub('-','×',k$comp)
+  rn=gsub('-','Ã—',k$comp)
   n=ncol(k)-1 
   l=length(rn)
   tk=t(as.matrix(k[l:1,-1]))
@@ -1876,7 +1944,7 @@ multperm=function(data, class, plot=T){
   tm1=ptm1[,cb:1]
   tm2=ptm2[,cb:1]
   comp=gsub(' = 0', '', PT$Comparison)
-  comp=gsub(' - ', '×', comp)
+  comp=gsub(' - ', 'Ã—', comp)
   if(plot){
     op=par(mai=c(1.2,1.2,.1,.1))
     image(1:nc, 1:cb, tm2, col=c('gray95','white'), xlab='', ylab='', axes=F, asp=1)
@@ -2379,6 +2447,8 @@ CASPEC=function(objid, DR='DR12', tablename='temp', verbose=T){
   }
   wq=which(duplicated(q$id))
   if(length(wq)>0) q=q[-wq]
+  q$objid=as.integer64(q$objid)
+  q$specobjid=as.integer64(q$specobjid)
   #dt=merge(data.table(data), q[,-2], by='id', all.x=T, sort=F)
   tryCatch(SkyQuery.dropTable(tablename, datasetName="MyDB"), 
            error=function(e) message('Warning: could not drop table from MyDB'))
@@ -2405,6 +2475,64 @@ CASPECloop=function(objid, n=1000, DR='DR12', tablename='temp'){
   return(res)
 }
 
+# search for some spectroscopic variables from spec objid in casjobs
+CASPEC2=function(specid, DR='DR12', tablename='temp', verbose=T){
+  require(data.table)
+  require(SciServer)
+  require(bit64, quietly = T)
+  tbldrp=tryCatch(SkyQuery.dropTable(tablename), error=function(e){})
+  Name = 'dailer';
+  Password = 0x540a438
+  Authentication.login(Name, Password);
+  specid[is.na(specid)]=1e18
+  data=data.frame(id=1:length(specid), specid=as.integer64(specid))
+  if(verbose) message('Uploading data to MyDB')
+  CasJobs.uploadDataFrameToTable(data, tablename)
+  dr=as.integer(strsplit(DR, 'DR')[[1]][2])
+  if(dr>=12){
+    query='select
+    id, s.bestobjID as objid, s.z as zspec, s.zErr,
+    zWarning as zW, sciencePrimary as prim, s.plate, s.mjd, s.fiberid, 
+    snMedian as SN, bptclass as bpt, lgm_tot_p50 as smass, sfr_tot_p50 as sfr, 
+    specsfr_tot_p50 as ssfr, oh_p50 as oh, d4000_n as d4000n, lick_hb as hb, 
+    lick_hd_a as hd, lick_hg_a as hg, h_delta_eqw as Hd_EW, h_gamma_eqw as Hg_EW,
+    h_beta_eqw as Hb_EW, h_alpha_eqw as Ha_EW, EW_Ha_6562, Flux_OIII_5006, 
+    Flux_SII_6716, Flux_SII_6730, Flux_Ha_6562, Flux_Hb_4861
+    from MyDB.temp as t 
+    left join SpecObjAll as s on s.specObjID=t.specid 
+    left join galSpecExtra as x on t.specid=x.specObjID
+    left join galSpecIndx as i on t.specid=i.specObjID
+    left join galSpecLine as l on t.specid=l.specObjID
+    left join emissionLinesPort as e on t.specid=e.specObjID
+    order by id'
+  }else{
+    query='select
+    id, s.bestobjID as objid, s.z as zspec, s.zErr,
+    zWarning as zW, sciencePrimary as prim, s.plate, s.mjd, s.fiberid, s.eClass
+    from MyDB.temp as t 
+    left join SpecObjAll as s on s.specObjID=t.specid
+    order by id'
+  }
+  
+  if(verbose) message('Executing query')
+  q=CasJobs.executeQuery(query, context=DR, format="csv")
+  if(verbose) message('Done')
+  q=fread(q)
+  q[q=='null' | q==-9999]=NA
+  q[,3:ncol(q)]=lapply(q[,3:ncol(q)], as.numeric)
+  if(dr>=12){
+    q=setorder(q, id, zErr, -bpt, -hb, na.last = T)
+  }else{
+    q=setorder(q, id, zErr, na.last = T)
+  }
+  wq=which(duplicated(q$id))
+  if(length(wq)>0) q=q[-wq]
+  q$objid=as.integer64(q$objid)
+  tryCatch(SkyQuery.dropTable(tablename, datasetName="MyDB"), 
+           error=function(e) message('Warning: could not drop table from MyDB'))
+  return(q)
+}
+
 # make median values w/ errors per bin
 binloc=function(x, y, nbin=10, fun='median', method='length', plot=T, ...){
   stopifnot(fun %in% c('median','mean','biw'))
@@ -2429,13 +2557,14 @@ binloc=function(x, y, nbin=10, fun='median', method='length', plot=T, ...){
 }
 
 # distance between two positions at same redshift, in kiloparsecs
-dist_kpc=function(ra1, dec1, z1, ra2, dec2){
+dist_kpc=function(ra1, dec1, z1, ra2, dec2, OM=0.3, OL=1-OM, H0=70){
+  require(cosmoFns)
   decm=0.5*(dec1+dec2)
   diffra=(ra2-ra1)*cos(decm*pi/180)
   #diffra=ra2-ra1
   diffdec=dec2-dec1
   dist_deg=sqrt(diffra^2+diffdec^2)
-  daa=cosmoFns::D.A(z1, .315, .685, 67.4)
+  daa=D.A(z1, OM, OL, H0)
   d=dist_deg*daa*pi/180
   return(d*1000)
 }
@@ -2611,7 +2740,7 @@ drawppslines=function(){
   lines(c(1.5,1.5,2,2,1.5), c(1,2,2,1,1), col=4)
   linesRhee(col=3)
   linesPasquali(col='purple')
-  mtext('Jaffé', 3, -2, adj=.95, col=2)
+  mtext('JaffÃ©', 3, -2, adj=.95, col=2)
   mtext('Mahajan', 3, -2.8, adj=.95, col=4)
   mtext('Rhee', 3, -3.6, adj=.95, col=3)
   mtext('Pasquali', 3, -4.4, adj=.95, col='purple')
@@ -2620,7 +2749,51 @@ drawppslines=function(){
 pchoilines=function(...) lines(c(1,1,2.6,3.5), c(0.5,0.3,-0.15,-0.15), ...)
 
 # Dressler-Shectman test for detecting substructures in galaxy clusters
-DS=function(ra, dec, z, zclus=NULL, N=10, plot=T){
+ds.test=function(ra, dec, z, Nboot=1000, plot=T){
+  require(RANN)
+  zcl=biwLoc(z)
+  vi=299792*(z-zcl)/(1+zcl)
+  v=biwLoc(vi)
+  sig=biwScale(vi)
+  N=length(vi)
+  Nnn=floor(sqrt(N))
+  k=(Nnn+1)/sig^2
+  nn=nn2(cbind(ra,dec), k=Nnn+1)$nn.idx
+  di2=matrix(NA, N, Nboot+1)
+  pb=txtProgressBar(0, 1000, style=3)
+  for(j in 1:(Nboot+1)){
+    vis=sample(vi, N, T)
+    if(j==1) vis=vi
+    for(i in 1:N){
+      vinn=vis[nn[i,]]
+      vloc=biwLoc(vinn)
+      sigloc=biwScale(vinn)
+      di2[i,j]=k*((vloc-v)^2+(sigloc-sig)^2)
+    }
+    setTxtProgressBar(pb, j)
+  }
+  close(pb)
+  di=sqrt(di2)
+  Ddev=apply(di, 2, sum)/N
+  prob=sum(Ddev[-1]<Ddev[1])/Nboot
+  if(plot){
+    op=par(mfrow=c(2,2), mai=c(0.65,0.65,0.2,0.2))
+    zz=(di[,1]-min(di[,1]))/max(di[,1]-min(di[,1]))/20
+    #zz=exp(di[,1]/2)/200
+    plot(ra, dec, pch=20, cex=.5, asp=1, xlab='RA', ylab='Dec')
+    circle.fun=function(x) draw.circle(x[1],x[2],x[3])
+    ap=apply(data.frame(ra,dec,zz), 1, circle.fun)
+    hist(Ddev[-1], 'fd', border='white', main='DS bootstrap distr.', col='gray',
+         xlab='DS statistic', xlim=c(min(Ddev),max(Ddev[1],max(Ddev))))
+    abline(v=median(Ddev), col='white', lty=2, lwd=2)
+    abline(v=Ddev[1], lty=2, lwd=2)
+    par(op)
+  }
+  return(c(DS=Ddev[1],Prob=prob))
+}
+
+# Dressler-Shectman test for detecting substructures in galaxy clusters
+ds.test=function(ra, dec, z, zclus=NULL, N=10, plot=T){
   require(RANN)
   n=length(ra)
   #if(n<20) N=round(sqrt(n))
@@ -2658,15 +2831,21 @@ DS=function(ra, dec, z, zclus=NULL, N=10, plot=T){
 }
 
 # hexagonal binning plot
-hexplot=function(x, y, z, nbin=NULL, fun='median', zbreaks=5, cbspan=0.95, zcex=1, 
-                 cbsep=0.01, cbwidth=0.03, mincts=5, plot=T, pal=NULL, ...){
+hexplot=function(x, y, z, nbin=NULL, fun='median', mincts=5, cbspan=0.95, 
+                 cbsep=0.01, cbwidth=0.03, zcex=1, pal=NULL, zrescale=F, 
+                 zbreaks=5, logzlab=F, ...){
+  # 'x', 'y', 'z' must be vectors
+  # 'fun' should be one of 'mean', 'median', 'rmedian', 'mode', 'median.disp'
   require(hexbin)
-  require(astro)
+  #zbreaks=5
+  zround=ifelse(fun=='mode', 0, 2)
+  d=data.frame(x=x, y=y, z=z)
+  
   getmode=function(v){
     v=v[!is.na(v)]; uniqv=unique(v)
     uniqv[which.max(tabulate(match(v, uniqv)))]
   }
-  d=data.frame(x=x, y=y, z=z)
+  qf=function(x) 0.7415*diff(quantile(x, c(.25,.75), na.rm=T))
   
   if(is.null(nbin)){
     nbin=max(c(length(hist(x, plot=F)$breaks), length(hist(y, plot=F)$breaks)))
@@ -2683,7 +2862,7 @@ hexplot=function(x, y, z, nbin=NULL, fun='median', zbreaks=5, cbspan=0.95, zcex=
     hb=hexbin(x, y, nbin, IDs=T)
     sp=split(d, hb@cID)
   }
-  hc=hcell2xy(hb)
+  
   if(fun=='mean')
     nt=unlist(lapply(sp, function(w) mean(w$z, na.rm=T)))
   if(fun=='median')
@@ -2692,64 +2871,98 @@ hexplot=function(x, y, z, nbin=NULL, fun='median', zbreaks=5, cbspan=0.95, zcex=
     nt=round(unlist(lapply(sp, function(w) median(w$z, na.rm=T))))
   if(fun=='mode')
     nt=unlist(lapply(sp, function(w) getmode(w$z)))
+  if(fun=='median.disp')
+    nt=unlist(lapply(sp, function(w) qf(w$z)))
   
+  hc=hcell2xy(hb)
   dx=getmode((hc$x[-1]-hc$x[-length(hc$x)])/2)
   dy=(hc$y[-1]-hc$y[-length(hc$y)])/3
   dy=getmode(dy[dy!=0])
   hexC=hexcoords(dx, dy, sep=NA)
   #cnt=cut(nt, hist(nt, plot=F)$breaks, labels=F)
-  hex.polygon=function(x, y, hexC, dx, dy = NULL, col=rainbow(10), border=1){
-    n=length(x); n7=rep.int(7:7, n)
+  hex.polygon=function(x, y, hexC, dx, dy=NULL, col=rainbow(10), border=1){
+    n=length(x); n7=rep.int(7, n)
     polygon(x=rep.int(hexC$x, n)+rep.int(x, n7), y=rep.int(hexC$y, n)+rep.int(y, n7), 
             col=col, border=border)
   }
   cts=hb@count
   c=cts>=mincts
   nt=nt[c]
-  snt=sort(unique(nt))
-  zbreaks=ifelse(zbreaks>length(snt), length(snt), zbreaks)
   
   if(is.null(pal)){
-    #pal=c(hcl.colors(length(table(nt))), '#BEBEBE4D')
-    #pal=hcl.colors(length(table(nt)))
-    pal=c("#5E4FA2", "#3288BD", "#66C2A5", "#ABDDA4", "#E6F598", "#FFFFBF", 
-          "#FEE08B", "#FDAE61", "#F46D43", "#D53E4F", "#9E0142")
+    pal=c('#5E4FA2','#3288BD','#66C2A5','#ABDDA4','#E6F598','#FFFFBF', 
+          '#FEE08B','#FDAE61','#F46D43','#D53E4F','#9E0142')
   }
-  pal=colorRampPalette(pal)(length(table(nt)))
-  col=pal[match(nt, snt)]
-  if(plot){
-    #aplot(x, y, pch='', ...)
-    magplot(x, y, pch='', side=1:4, labels=c(1,1,0,0), ...)
-    hex.polygon(hc$x[c], hc$y[c], hexC, col=col, border=NA)
-    cusr=par('usr')
-    xi=(1-cbspan)/2; xf=1-(1-cbspan)/2
-    xl=xi*(cusr[2]-cusr[1])+cusr[1]
-    xr=xf*(cusr[2]-cusr[1])+cusr[1]
-    yb=(1+cbsep)*(cusr[4]-cusr[3])+cusr[3]
-    yt=(1+cbsep+cbwidth)*(cusr[4]-cusr[3])+cusr[3]
-    snt=round(seq(min(snt), max(snt), length.out=zbreaks),2)
-    color.legend(xl, yb, xr, yt, snt, pal, zcex)
+  
+  if(zrescale){
+    snt=sort(unique(nt))
+    lnt=length(snt)
+    clpal=colorRampPalette(pal)(lnt)
+    mnt=match(nt, snt)
+    pal.=clpal[mnt]
+    zseq=seq(min(snt), max(snt), length.out=length(snt))
+    nx=approx(unique(nt), unique(mnt), xout = zseq)$y
+    zbreaks=ifelse(zbreaks>lnt, lnt, zbreaks)
+    if(is.null(zbreaks))
+      zbreaks=length(hist(nx, plot = F)$mids)
+    clpal=clpal[nx]
+  }else{
+    ntn=(nt-min(nt))/max(nt-min(nt))
+    pal.=colorRamp(pal)(ntn)
+    pal.=apply(pal., 1, function(x) rgb(x[1],x[2],x[3], maxColorValue=255))
+    clpal=colorRampPalette(pal)(length(unique(pal.)))
   }
-  gr=data.frame(x=hc$x[c],y=hc$y[c],z=nt,zcol=col,counts=cts[c])
-  gr=na.omit(gr)
+
+  xrange=c(min(hc$x[c])-dx/2,max(hc$x[c])+dx/2)
+  dy2=sqrt(dx^2+dy^2)
+  #dy2=dy2
+  yrange=c(min(hc$y[c])-dy2-dy,max(hc$y[c])+dy2+dy)
+  magplot(xrange, yrange, pch='', side=1:4, labels=c(1,1,0,0), grid=F, ...)
+  hex.polygon(hc$x[c], hc$y[c], hexC, col=pal., border=NA)
+  
+  cusr=par('usr')
+  xi=(1-cbspan)/2; xf=1-(1-cbspan)/2
+  xl=xi*(cusr[2]-cusr[1])+cusr[1]
+  xr=xf*(cusr[2]-cusr[1])+cusr[1]
+  yb=(1+cbsep)*(cusr[4]-cusr[3])+cusr[3]
+  yt=(1+cbsep+cbwidth)*(cusr[4]-cusr[3])+cusr[3]
+  clab=round(seq(min(nt), max(nt), length.out=zbreaks), zround)
+  if(logzlab)
+    clab=round(10^clab) # in case of log(z)
+  color.legend(xl, yb, xr, yt, clab, clpal, zcex)
+  gr=na.omit(data.frame(x=hc$x[c],y=hc$y[c],z=nt,zcol=pal.,counts=cts[c]))
+  
   return(invisible(list(class=hb@cID, grid=gr)))
 }
 
-# squared binning plot; x, y, z are vectors
-mplot=function(x, y, z=NULL, nbin=100, fun='median', mincts=1, pal=hcl.colors(10), 
-               plot=T, magmap=F, asp=NA, ...){
+# squared binning plot
+mplot=function(x, y, z=NULL, nbin=100, fun='median', mincts=1, cbspan=0.95, 
+               cbsep=0.01, cbwidth=0.03, zcex=1, pal=NULL, plot=T, magmap=F, 
+               zrescale=F, zbreaks=5, ...){
+  # 'x', 'y', 'z' must be vectors; if 'z' is null an histogram is plotted
+  # 'fun' should be one of 'mean', 'median', 'rmedian', 'mode', 'median.disp'
   require(raster)
+  #zbreaks=5
+  zround=ifelse(fun=='mode', 0, 2)
   d=cbind(x, y)
   rast=raster()
   extent(rast)=extent(d)
   dim(rast)=c(nbin, nbin, 1)
+  
+  getmode=function(v){
+    v=v[!is.na(v)]; uniqv=unique(v)
+    uniqv[which.max(tabulate(match(v, uniqv)))]
+  }
+  qf=function(x) 0.7415*diff(quantile(x, c(.25,.75), na.rm=T))
+  
   if(is.null(z)){
     mr=rasterize(d, rast, fun='count')
     m=as.matrix(mr)
     m[m < mincts]=NA
   }else{
-    f=switch(fun, 'mean'=mean, 'median'=median)
-    mr=rasterize(d, rast, z, fun=f)
+    f=switch(fun, 'mean'=mean, 'median'=median, 
+             'median.disp'=qf, 'mode'=getmode)
+    mr=rasterize(d, rast, z, fun=function(x,...) f(x))
     mc=rasterize(d, rast, z, fun='count')
     m=as.matrix(mr)
     c=as.matrix(mc)
@@ -2762,10 +2975,47 @@ mplot=function(x, y, z=NULL, nbin=100, fun='median', mincts=1, pal=hcl.colors(10
   ys=midpoints(ycut)
   m=t(m[nbin:1,])
   l=list(x=xs, y=ys, z=m)
+  
   if(plot){
     require(magicaxis)
-    col=colorRampPalette(pal)(length(unique(c(m))))
-    magimage(l, col=col, magmap=magmap, side=1:4, labels=c(1,1,0,0), asp=asp, ...)
+    if(is.null(pal)){
+      pal=c('#5E4FA2','#3288BD','#66C2A5','#ABDDA4','#E6F598','#FFFFBF', 
+            '#FEE08B','#FDAE61','#F46D43','#D53E4F','#9E0142')
+    }
+    cm=na.omit(c(m))
+    um=unique(cm)
+    lum=length(um)
+    clpal=colorRampPalette(pal)(lum)
+    zbreaks=ifelse(zbreaks>lum, lum, zbreaks)
+    
+    if(zrescale){
+      sm=sort(um)
+      m=matrix(match(c(m), sm), nbin, nbin)
+      mcm=match(cm, sm)
+      zseq=seq(min(sm), max(sm), length.out=length(sm))
+      nx=approx(um, unique(mcm), xout = zseq)$y
+      if(is.null(zbreaks))
+        zbreaks=length(hist(nx, plot = F)$mids)
+      clpal=clpal[nx]
+      l$z=scale(m)
+      l$z=m
+    }
+    
+    dx=diff(range(xs))*0.07
+    dy=diff(range(ys))*0.07
+    xlim=c(min(xs)-dx, max(xs)+dx)
+    ylim=c(min(ys)-dy, max(ys)+dy)
+    magimage(xs, ys, m, col=pal, magmap=magmap, side=1:4, labels=c(1,1,0,0),
+             asp=NA, useRaster=T, xlim=xlim, ylim=ylim, ...)
+    
+    cusr=par('usr')
+    xi=(1-cbspan)/2; xf=1-(1-cbspan)/2
+    xl=xi*(cusr[2]-cusr[1])+cusr[1]
+    xr=xf*(cusr[2]-cusr[1])+cusr[1]
+    yb=(1+cbsep)*(cusr[4]-cusr[3])+cusr[3]
+    yt=(1+cbsep+cbwidth)*(cusr[4]-cusr[3])+cusr[3]
+    clab=round(seq(min(cm), max(cm), length.out=zbreaks), zround)
+    color.legend(xl, yb, xr, yt, clab, clpal, zcex)
   }
   invisible(l)
 }
@@ -3032,8 +3282,9 @@ id3=function(x,y,z){
   return(n)
 }
 
-# rotate bivariate data (matrix, 1st column: x, 2nd column: y) by an angle in radians
-rotdata=function(data, angle){
+# rotate bivariate data (matrix, 1st column: x, 2nd column: y) by an angle
+rotdata=function(data, angle, type='rad'){
+  if(type=='deg') angle=angle*pi/180
   rot=matrix(c(cos(angle),sin(angle),-sin(angle),cos(angle)), 2, 2) %*% t(data)
   return(t(rot))
 }
@@ -3254,10 +3505,10 @@ tpcf=function(x, y, nbin=6, type='DP', method='content', knn=5, full_region=T, p
   return(list(parameters=param, data=round(data.frame(xi=ACF,r=bins,xi.err=Delta_ACF),5)))
 }
 
-# Meassuring intergalactic pair separation distribution following Capelato (1980)
+# Measuring intergalactic pair separation distribution following Capelato (1980)
 intergal=function(ra, dec, z=NULL, r200=1, vdisp=1e3, Om=0.3, Ol=1-Om, H0=70, plot=T, ...){
-  # if z is not provided, ra and dec are considered as projected normalized distances 
-  # and velocities, respectively
+  # if z is not provided, ra and dec are considered as projected normalized 
+  # distances and velocities, respectively
   require(cosmoFns)
   require(minpack.lm)
   if(!is.null(z)){
@@ -3347,12 +3598,15 @@ opthist=function(x, breaks='Knuth', Nmin=2, verbose=F, plot=T, ...){
   return(invisible(hst))
 }
 
+# 1D histogram bin optimization with Shimazaki, Knuth & Hogg methods
 hst=function(x, breaks='Hogg', plot=T, col='lightgray', border=1, bwd=1, bty=1, 
              freq=T, ...){
+  # 'x' must be a vector 
+  # 'breaks' should be one of 'Shimazaki', 'Knuth', 'Hogg'
   x=c(na.omit(x))
   a=2
   b=100
-  # Shimazaki
+  # Shimazaki method
   sshist=function(x){
     n=b-a+1
     rg=range(x)
@@ -3372,7 +3626,7 @@ hst=function(x, breaks='Hogg', plot=T, col='lightgray', border=1, bwd=1, bty=1,
     optN=idx+a-1
     return(optN)
   }
-  # Knuth
+  # Knuth method
   khist=function(x){
     n=b-a+1
     l=length(x)
@@ -3390,7 +3644,7 @@ hst=function(x, breaks='Hogg', plot=T, col='lightgray', border=1, bwd=1, bty=1,
     optN=idx+a-1
     return(optN)
   }
-  # Hogg
+  # Hogg method
   hhist=function(x){
     alpha=1
     n=b-a+1
@@ -3413,22 +3667,21 @@ hst=function(x, breaks='Hogg', plot=T, col='lightgray', border=1, bwd=1, bty=1,
     optN=idx+a-1
     return(optN)
   }
-  
   N=NULL
   brk=breaks[1]
   if(brk %in% c('Hogg','H','h')){
     N=hhist(x)
-  }
-  if(brk %in% c('Knuth','K','k')){
+  }else if(brk %in% c('Knuth','K','k')){
     N=khist(x)
-  }
-  if(brk %in% c('Shimazaki','S','s')){
+  }else if(brk %in% c('Shimazaki','S','s')){
     N=sshist(x)
+  }else{
+    stop("'breaks' should be one of 'Hogg', 'Knuth', 'Shimazaki'")
   }
   if(!is.null(N)){
-    if(N==100)  message('Warning: number of maximum bins (100) reached')
-    if(N>100)  message('Warning: number of maximum bins (100) excedeed')
     message('optimal number of bins: ', N)
+    if(N==b)  message('Warning: number of maximum bins (',b,') reached')
+    if(N>b)  message('Warning: number of maximum bins (',b,') excedeed')
   }
   if(length(breaks)==1 & is.null(N)) N=breaks
   breaks=seq(min(x), max(x), length.out = N+1)
@@ -3442,13 +3695,14 @@ hst=function(x, breaks='Hogg', plot=T, col='lightgray', border=1, bwd=1, bty=1,
   return(invisible(hst))
 }
 
+# 2D histogram bin optimization with Shimazaki, Knuth & Hogg methods
 hst2d=function(x, breaks='k', plot=F){
-  require(gplots)
+  # 'x' must be a two columns matrix
   x=na.omit(x)
   a=2
   b=100
-  # Shimazaki
-  sshist2=function(x, a=2, b=100, plot=F){
+  # Shimazaki method
+  sshist_2d=function(x, a=2, b=100, plot=F){
     n=b-a+1
     rg1=diff(range(x[,1]))
     rg2=diff(range(x[,2]))
@@ -3457,7 +3711,7 @@ hst2d=function(x, breaks='k', plot=F){
     for(i in 1:n){
       Ni=i+a-1
       Ni2=Ni^2
-      ki=c(hist2d(x[,1], x[,2], Ni, show=F)$counts)
+      ki=c(gplots::hist2d(x[,1], x[,2], Ni, show=F)$counts)
       D=rg1*rg2/Ni2
       k=ntot/Ni2
       v=sum((ki-k)^2)/Ni2
@@ -3468,15 +3722,15 @@ hst2d=function(x, breaks='k', plot=F){
     if(plot) plot(a:b, C, type='l')
     return(optN)
   }
-  # Knuth
-  khist2=function(x, a=2, b=100, plot=F){
+  # Knuth method
+  khist_2d=function(x, a=2, b=100, plot=F){
     n=b-a+1
     l=nrow(x)
     logp=numeric(n)
     for(i in 1:n){
       Ni=i+a-1
       Ni2=Ni^2
-      cts=c(hist2d(x[,1], x[,2], Ni, show=F)$counts)
+      cts=c(gplots::hist2d(x[,1], x[,2], Ni, show=F)$counts)
       A=l*log(Ni2)+lgamma(Ni2/2)-lgamma(l+Ni2/2)
       B=-Ni2*lgamma(0.5)+sum(lgamma(cts+0.5))
       logp[i]=A+B
@@ -3486,8 +3740,8 @@ hst2d=function(x, breaks='k', plot=F){
     if(plot) plot(a:b, logp, type='l')
     return(optN)
   }
-  # Hogh
-  hhist2=function(x, a=2, b=100, alpha=1, plot=F){
+  # Hogg method
+  hhist_2d=function(x, a=2, b=100, alpha=1, plot=F){
     n=b-a+1
     rg1=diff(range(x[,1]))
     rg2=diff(range(x[,2]))
@@ -3496,7 +3750,7 @@ hst2d=function(x, breaks='k', plot=F){
       Nb=i+a-1
       Nb2=Nb^2
       D=rg1*rg2/Nb2
-      Ni=c(hist2d(x[,1], x[,2], Nb, show=F)$counts)
+      Ni=c(gplots::hist2d(x[,1], x[,2], Nb, show=F)$counts)
       S=sum(Ni+alpha)
       Li=numeric(Nb2)
       for(j in 1:Nb2){
@@ -3511,22 +3765,27 @@ hst2d=function(x, breaks='k', plot=F){
   }
   N=NULL
   if(breaks %in% c('Hogg','H','h')){
-    N=hhist2(x, a, b)
-  }
-  if(breaks %in% c('Knuth','K','k')){
-    N=khist2(x, a, b)
-  }
-  if(breaks %in% c('Shimazaki','S','s')){
-    N=sshist2(x, a, b)
+    N=hhist_2d(x, a, b)
+  }else if(breaks %in% c('Knuth','K','k')){
+    N=khist_2d(x, a, b)
+  }else if(breaks %in% c('Shimazaki','S','s')){
+    N=sshist_2d(x, a, b)
+  }else{
+    stop("'breaks' should be one of 'Hogg', 'Knuth', 'Shimazaki'")
   }
   if(!is.null(N)){
-    if(N==100)  message('Warning: number of maximum bins (100) reached')
-    if(N>100)  message('Warning: number of maximum bins (100) excedeed')
+    message('optimal number of bins: ', N)
+    if(N==b)  message('Warning: number of maximum bins (',b,') reached')
+    if(N>b)  message('Warning: number of maximum bins (',b,') excedeed')
   }
-  col=rev(grey((0:1000)/1000))
-  hst=hist2d(x[,1], x[,2], N, col=col, show=plot)
-  message('optimal number of bins: ', N)
-  return(invisible(hst))
+  if(plot){
+    col=c('#9E0142','#D53E4F','#F46D43','#FDAE61','#FEE08B','#FFFFBF', 
+          '#E6F598','#ABDDA4','#66C2A5','#3288BD','#5E4FA2')
+    col=rev(col)
+    hst=gplots::hist2d(x[,1], x[,2], N, col=col, show=T)
+    box()
+    return(invisible(hst))
+  }
 }
 
 Matrix2DataFrame=function(mat,x=NULL,y=NULL,xlab="x",ylab="y",zlab="z"){
@@ -3597,6 +3856,7 @@ oner_breaks=function(x, n, method='content'){
   return(b)
 }
 
+# Image interpolation using fields::interp.surface
 interp.img=function(x, y, z, nbin=100, plot=T, ...){
   require(fields)
   require(reshape2)
@@ -3618,11 +3878,12 @@ interp.img=function(x, y, z, nbin=100, plot=T, ...){
   m=t(ac)
   l=list(x=xs, y=ys, z=m)
   if(plot) magimage(l, magmap = F, ...)
-  return(l)
+  return(invisible(l))
 }
 
-# Vector field for a z matrix gradient
-vector.field=function(x, y, z, add=F, alog=F, arrow.col='black', ...){
+# Vector field for a z matrix using the gradient
+vector.field=function(x, y, z, add=F, alog=F, arrow.col='black', arrow.scale=1,
+                      ...){
   require(pracma)
   if(class(x)=='list' & length(x)==3){
     xyz=x; x=xyz[[1]]; y=xyz[[2]]; z=xyz[[3]]
@@ -3634,8 +3895,8 @@ vector.field=function(x, y, z, add=F, alog=F, arrow.col='black', ...){
   w=which(!is.na(z), arr.ind = T)
   n=gn[w]; ph=gp[w]
   d=data.frame(x=x[w[,1]],y=y[w[,2]],norm=n,phase=ph)
-  d$x1=d$x+d$norm*cos(d$phase)
-  d$y1=d$y+d$norm*sin(d$phase)
+  d$x1=d$x+d$norm*arrow.scale*cos(d$phase)
+  d$y1=d$y+d$norm*arrow.scale*sin(d$phase)
   if(!add) image(x, y, z, ...)
   arrows(d$x, d$y, d$x1, d$y1, length = 0.05, col=arrow.col)
   invisible(na.omit(d))
@@ -3765,9 +4026,23 @@ multip.mom=function(ra, dec, ra0, dec0, z0, r1=0, r2=1, m=0:10, N=1e3,
 # Sigma clipping
 sigma.clip=function(x, nclip=3, N.max=5){
   mean=mean(x); sigma=sd(x)
-  #mean=biwLoc(x); sigma=biwScale(x)
   clip.lo=mean-(nclip*sigma)
   clip.up=mean+(nclip*sigma)
+  x=x[x<clip.up & x>clip.lo]
+  if(N.max>0){
+    N.max=N.max-1
+    x=Recall(x, nclip=nclip, N.max=N.max)
+  }
+  return(x)
+}
+
+# Analogous to sigma clipping but using robust stats
+scale.clip=function(x, nclip=3, N.max=5){
+  require(RobStatTM)
+  lsm=locScaleM(x, 'bisquare', na.rm=T)
+  mu=lsm$mu; disp=lsm$disper
+  clip.lo=mu-(nclip*disp)
+  clip.up=mu+(nclip*disp)
   x=x[x<clip.up & x>clip.lo]
   if(N.max>0){
     N.max=N.max-1
@@ -3796,7 +4071,7 @@ binning=function(x, dx=0.6, nmin=15){
 }
 
 # Shifting-gapper technique following Lopes et al. (2009) recipe
-shifting.gapper=function(x, y, dx=0.6, nmin=15, dxmax=0.6, vcenter=T, plot=T){
+shifting.gapper=function(x, y, dx=0.6, nmin=15, dxmax=0.6, vgap=300, vcenter=T, plot=T){
   # require binning()
   # dx: minimum size of bins (Mpc)
   # nmin: minimum number of object per bin
@@ -3846,7 +4121,7 @@ shifting.gapper=function(x, y, dx=0.6, nmin=15, dxmax=0.6, vcenter=T, plot=T){
       vinf=sort(yi[yi<0])
       vsup=sort(yi[yi>0])
       
-      facgap=max(vlim/5, 300)
+      facgap=max(vlim/5, vgap)
       Ni=sum(wi)
       dv=facgap*(1+exp(-(Ni-6)/33))
       
@@ -4014,7 +4289,7 @@ pps=function(ra, dec, z, raclus, declus, zclus, Om=.3, Ol=1-Om, H0=67){
   angle=acos(xyzsep)
   dproj=groupdist*angle # in Mpc
   # see https://arxiv.org/pdf/1711.10018.pdf https://arxiv.org/pdf/1902.05276.pdf
-  # http://publications.lib.chalmers.se/records/fulltext/159140.pdf p.12
+  #     http://publications.lib.chalmers.se/records/fulltext/159140.pdf p.12
   return(data.frame(dproj, vlos))
 }
 
@@ -4057,10 +4332,11 @@ hist2Dclass=function(x, y, nbins=c(10,10), breaks=NULL){
   ny=as.numeric(index.y)
   p=0.5*(nx+ny)*(nx+ny+1)+nx
   k=match(p, sort(unique(p)))
+  #m=tapply(x, list(index.x, index.y), length)
   return(k)
 }
 
-# finding which properties are more correlated with another one 
+# Finding which properties are more correlated with another one 
 # following Blanton et al. (2005) approach
 blanton.pred=function(x, n=5, method='length'){
   # require hist2Dclass()
@@ -4152,4 +4428,82 @@ weighted.var=function(x, w, na.rm = FALSE){
   mean.w=sum(x*w)/sum(w)
   wvar=(sum.w/(sum.w^2-sum.w2))*sum(w*(x-mean.w)^2, na.rm=na.rm)
   return(wvar)
+}
+
+# Find redshift limit with maximum number of objects in a complete sample
+zopt=function(z, Mr, OM=0.3, OL=1-OM, H0=70){
+  # require absmag()
+  d=cbind(z, Mr)
+  f=function(z, d) sum(d[,1]<=z & d[,2]<=absmag(z, OM=OM, H0=H0))
+  n=optimise(f, range(z), d, maximum = T)
+  r=c('z'=n[[1]], 'mag'=absmag(n[[1]], OM=OM, H0=H0), 'N'=n[[2]])
+  return(r)
+}
+
+# Geometric Histogram Separation for using in hd.test function
+ghs.hd=function(x1, x2, plot=T){
+  h1=hist(x1, 'fd', plot = F)
+  h2=hist(x2, 'fd', plot = F)
+  both=c(h1$breaks, h2$breaks)
+  n=length(both)-1 # number of total bins
+  rnge=range(both)
+  breaks=seq(rnge[1], rnge[2], length.out = n+1)
+  h1=hist(x1, breaks, plot = F)
+  h2=hist(x2, breaks, plot = F)
+  dx=diff(rnge)/n
+  dy=apply(cbind(h1$density, h2$density), 1, min) # min of intersection
+  ao=sum(dx*dy) # the relative area 
+  a_height=max(h1$density)
+  b_height=max(h2$density)
+  c_height=max(dy)  
+  bcl=(a_height+b_height-2*c_height)/(a_height+b_height)
+  bca=1-ao/(2-ao)
+  ghs=(sqrt(bca)+bcl)/2
+  R2=cor(h1$counts,h2$counts)^2
+  if(plot){
+    ymax=max(h1$counts,h2$counts)
+    plot(c(rnge), c(0, ymax), pch='', ylab='Frequency', xlab='log(HD)')
+    abline(h=0, col='gray')
+    lines(c(breaks[1],breaks), c(0,h1$counts,0), type='s', col='red') 
+    lines(c(breaks[1],breaks), c(0,h2$counts,0), type='s', col='black') 
+    legend('topleft', lty=1, col=c('red','black'), bty='n', x.intersp=.5, 
+           legend=c('Simulation','Resampling'))
+  }
+  return(list('ghs'=ghs,'R2'=R2))
+}
+
+# Gaussianity indicator using the HD distance separation
+# require the HD_simulations.RDS file!
+hd.test=function(x, Nsamp=1000, bd.file='HD_simulations.RDS', plot=T){
+  # x: vector of the LOS cluster velocities inside R200
+  require(distrEx)
+  db=readRDS(bd.file)
+  n=length(x)
+  if(length(x)<10) 
+    stop('too few elements - at least 10 values are needed')
+  sim=db[,n]
+  hns=function(x) (4/(length(x)*3))^(1/5)*sd(x)
+  x=(x-mean(x))/sd(x)
+  hdr=vector(length=Nsamp)
+  pb=txtProgressBar(1,Nsamp,1,'=',style=3)
+  for(i in 1:Nsamp){
+    samp=sample(x, n, replace=T)
+    hs=hns(samp)
+    hdr[i]=HellingerDist(Norm(), samp, asis.smooth.discretize="smooth", h.smooth=hs)
+    setTxtProgressBar(pb, i)
+  }
+  close(pb)
+  comp=ghs.hd(log10(sim), log10(hdr), plot=plot)
+  u=1-comp[[1]]
+  R2=comp[[2]]
+  #r=ghc(log10(sim), log10(hdr), plot=plot)
+  if(plot){
+    mtext(bquote(N==.(n)), line=.5, adj=.1)
+    mtext(bquote(ghu==.(round(u,3))), line=.5, adj=.5)
+    mtext(bquote(R^2==.(round(R2,3))), line=.5, adj=.9)
+    legend('topleft', lty=1, col=c('red','black'), bty='n', x.intersp=.5, 
+           legend=c('Simulation','Resampling'))
+  } 
+  res=list('ghu'=u, 'R2'=R2, 'HD_values'=hdr)
+  return(invisible(res))
 }

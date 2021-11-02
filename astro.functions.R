@@ -1,4 +1,4 @@
-
+########## ASTRONOMY UTILTITY FUNCTIONS AND MISCELANEOUS ##########
 
 # Function for make fraction plots by bins
 fracbin=function(variable, classe, nbin='hist', error='binomial', plot=T, erbar=T, ...){
@@ -2375,7 +2375,8 @@ CASPH=function(objid, DR='DR12', tablename='temp'){
   data=data.frame(id=1:length(objid), objid=as.integer64(objid))
   CasJobs.uploadDataFrameToTable(data, tablename)
   query='select
-  id, t.objid, ra, dec, run, rerun, camcol, field, petroMag_u as upmag, 
+  id, t.objid, ra, dec, run, rerun, camcol, field, petroR50_r, petroR90_r,
+  petroMag_u as upmag, 
   petroMagErr_u as upmag_err, petroMag_g as gpmag, petroMagErr_g as gpmag_err, 
   petroMag_r as rpmag, petroMagErr_r as rpmag_err, petroMag_i as ipmag, 
   petroMagErr_i as ipmag_err, petroMag_z as zpmag, petroMagErr_z as zpmag_err, 
@@ -2643,6 +2644,7 @@ extinction=function(ra, dec, use_ned=T, verbose=T, interpolate=F){
   }
 }
 
+# Empirical kpc to degree conversion
 kpc2deg=function(d_kpc, z){
   m=77106.47*z^3-95094.4*z^2+77664.79*z+0.1006072
   return(d_kpc/m)
@@ -2733,6 +2735,7 @@ linesPasquali=function(...){
   for(i in 1:8) curve(f(x, a[i], b[i], c[i]), 0, 1, add=T,...)
 }
 
+# Draw several PPS line regions
 drawppslines=function(){
   abline(1.5,-1.25, col=2)
   lines(c(0,.5,.5), c(1,1,0), col=4)
@@ -2746,13 +2749,15 @@ drawppslines=function(){
   mtext('Pasquali', 3, -4.4, adj=.95, col='purple')
 }
 
+# Draw the lines of Park & Choi (2005) in the color-color_grad diagram
 pchoilines=function(...) lines(c(1,1,2.6,3.5), c(0.5,0.3,-0.15,-0.15), ...)
 
 # Dressler-Shectman test for detecting substructures in galaxy clusters
-ds.test=function(ra, dec, z, Nboot=1000, plot=T){
+ds.test=function(ra, dec, z, zcen=NA, Nboot=1000, plot=T){
+  # require biwScale & biwLoc functions
   require(RANN)
-  zcl=biwLoc(z)
-  vi=299792*(z-zcl)/(1+zcl)
+  if(is.na(zcen)) zcen=biwLoc(z)
+  vi=299792*(z-zcen)/(1+zcen)
   v=biwLoc(vi)
   sig=biwScale(vi)
   N=length(vi)
@@ -2760,7 +2765,7 @@ ds.test=function(ra, dec, z, Nboot=1000, plot=T){
   k=(Nnn+1)/sig^2
   nn=nn2(cbind(ra,dec), k=Nnn+1)$nn.idx
   di2=matrix(NA, N, Nboot+1)
-  pb=txtProgressBar(0, 1000, style=3)
+  pb=txtProgressBar(0, Nboot, style=3)
   for(j in 1:(Nboot+1)){
     vis=sample(vi, N, T)
     if(j==1) vis=vi
@@ -2792,6 +2797,7 @@ ds.test=function(ra, dec, z, Nboot=1000, plot=T){
   return(c(DS=Ddev[1],Prob=prob))
 }
 
+# DEPRECATED!!
 # Dressler-Shectman test for detecting substructures in galaxy clusters
 ds.test=function(ra, dec, z, zclus=NULL, N=10, plot=T){
   require(RANN)
@@ -3289,6 +3295,7 @@ rotdata=function(data, angle, type='rad'){
   return(t(rot))
 }
 
+# rotate data by a angle defined by the linear fit model
 rotdatalm=function(x, y, asp=1, plot=T){
   df=data.frame(x=x,y=y)
   reg=lm(y~x, df)
@@ -3302,6 +3309,21 @@ rotdatalm=function(x, y, asp=1, plot=T){
     par(op)
   }
   return(rot)
+}
+
+# Rotate by an angle that minimizes the data corr. within a range of angles
+rotopt=function(x, y, rang=c(0,360)){
+  f=function(a, x, y){
+    rot=matrix(c(cos(a),sin(a),-sin(a),cos(a)), 2, 2) %*% rbind(x,y)
+    abs(cor(rot[1,], rot[2,]))
+  }
+  opt=optimize(f, rang*pi/180, x=x, y=y)
+  ang=opt$minimum
+  if(ang>pi) ang=ang-2*pi
+  dang=round(ang*180/pi,2)
+  corr=round(opt$objective,4)
+  message('Optimal rotation angle: ', dang,' degrees and correlation of ', corr)
+  rot.xy=t(matrix(c(cos(ang),sin(ang),-sin(ang),cos(ang)), 2, 2) %*% rbind(x,y))
 }
 
 # 
@@ -3903,7 +3925,7 @@ vector.field=function(x, y, z, add=F, alog=F, arrow.col='black', arrow.scale=1,
 }
 
 density.plot=function(x, y=NULL, n=100, col=NULL, fillcol=NA, norm=F, contours=F, 
-                      nlevels=10, add=F, ...){
+                      nlevels=10, add=F, magmap=F, ...){
   require(magicaxis)
   if(is.null(y)){
     den=density(x, na.rm = T)
@@ -3915,7 +3937,8 @@ density.plot=function(x, y=NULL, n=100, col=NULL, fillcol=NA, norm=F, contours=F
       polygon(den$x, den$y, col=fillcol, border=NA)
       lines(den, col=col[1], ...)
     }else{
-      magplot(den, col=col[1], ylab='Density', ...)
+      ylab=ifelse(norm, 'Normalized Density', 'Density')
+      magplot(den, col=col[1], ylab=ylab, ...)
     }
   }else{
     require(MASS)
@@ -3925,7 +3948,7 @@ density.plot=function(x, y=NULL, n=100, col=NULL, fillcol=NA, norm=F, contours=F
       col=c("#5E4FA2","#3288BD","#66C2A5","#ABDDA4","#E6F598","#FFFFBF", 
             "#FEE08B","#FDAE61","#F46D43","#D53E4F","#9E0142")
     }
-    if(!add) magimage(den, col=col, magmap=F, asp=NA, ...)
+    if(!add) magimage(den, col=col, magmap=magmap, asp=NA, ...)
     if(contours) contour(den, nlevels=nlevels, drawlabels=F, add=T, col=col)
   }
   return(invisible(den))
@@ -3978,7 +4001,7 @@ multip.mom=function(ra, dec, ra0, dec0, z0, r1=0, r2=1, m=0:10, N=1e3,
                     Om=0.27, Ol=1-Om, H0=72, plot=T){
   require(cosmoFns)
   require(plotrix)
-  #require(spatstat)
+  require(spatstat.geom)
   da=D.A(z0, Om, Ol, H0) # Angular diameter distance in Mpc
   dz=sin(dec0*pi/180)*sin(dec*pi/180)
   dr=cos(dec0*pi/180)*cos(dec*pi/180)*cos((ra0-ra)*pi/180)
@@ -4000,8 +4023,8 @@ multip.mom=function(ra, dec, ra0, dec0, z0, r1=0, r2=1, m=0:10, N=1e3,
   scl=apply(Qm, 2, qf)
   qm=loc[m>0]
   w=(qm-min(qm))/(max(qm)-min(qm))
-  Pm.med=spatstat::weighted.median(m[m>1], w[m>1]) # Median angular scale
-  Pm.err=0.7415*diff(spatstat::weighted.quantile(m[m>1], w[m>1], c(.25,.75)))
+  Pm.med=weighted.median(m[m>1], w[m>1]) # Median angular scale
+  Pm.err=0.7415*diff(weighted.quantile(m[m>1], w[m>1], c(.25,.75)))
   lwr=loc-scl
   upr=loc+scl
   if(plot){
@@ -4071,7 +4094,7 @@ binning=function(x, dx=0.6, nmin=15){
 }
 
 # Shifting-gapper technique following Lopes et al. (2009) recipe
-shifting.gapper=function(x, y, dx=0.6, nmin=15, dxmax=0.6, vgap=300, vcenter=T, plot=T){
+shifting.gapper=function(x, y, dx=0.6, nmin=15, dxmax=0.6, vgap=300, vcenter=F, plot=T){
   # require binning()
   # dx: minimum size of bins (Mpc)
   # nmin: minimum number of object per bin
@@ -4085,7 +4108,11 @@ shifting.gapper=function(x, y, dx=0.6, nmin=15, dxmax=0.6, vgap=300, vcenter=T, 
     dy=runif(length(wd), 1e-4, 2e-4)
     y[wd]=y[wd]+dy
   }
-  if(vcenter) y=y-locScaleM(y[x<1], psi='bisquare')$mu
+  if(vcenter){
+    voff=locScaleM(y[x<1], psi='bisquare')$mu
+    cat('Voffset:',voff)
+    y=y-voff
+  } 
   x.=sort(x)
   y.=y[order(x)]
   w.inc=1:N
@@ -4293,6 +4320,54 @@ pps=function(ra, dec, z, raclus, declus, zclus, Om=.3, Ol=1-Om, H0=67){
   return(data.frame(dproj, vlos))
 }
 
+# Get galaxies around (ra,dec,z) coordinates in the SDSS field
+getSDSSgals=function(ra, dec, z, Rmax=6, Vmax=4000, z.type='spec', DR='DR12', Om=0.3, H0=67){
+  # require pps function
+  # z.type can be 'spec' (spectroscopic z) or 'photo' (photometric z)
+  require(SciServer)
+  require(data.table)
+  require(cosmoFns)
+  suppressPackageStartupMessages(require(bit64))
+  cls=na.omit(data.table(ra, dec, z, id=1:length(z)))
+  rad=Rmax/(D.A(cls$z, Om, 1-Om, H0)*pi/180) # Rmax (in Mpc) to degree conversion
+  ramin=cls$ra-rad; ramax=cls$ra+rad
+  decmin=cls$dec-rad; decmax=cls$dec+rad
+  zlim=Vmax*(1+cls$z)/299792.458
+  zmin=cls$z-zlim; zmax=cls$z+zlim
+  token1=Authentication.login('dailer', 0x540a438);
+  if(z.type=='spec'){
+    q="select specObjID, objID, ra, dec, p.z, zErr, petroMag_r-extinction_r as rpmag 
+       from SpecPhotoAll as p where zErr>0 and type=3 and class='GALAXY' and ra between"
+  }
+  if(z.type=='photo'){
+    q="select p.objID, ra, dec, p.z, zErr, petroMag_r-extinction_r as rpmag 
+       from Photoz as p join PhotoObjAll as o on o.objid=p.objid where zErr>0
+       and type=3 and ra between"
+  }
+  n=nrow(cls)
+  mem=vector('list', length = n)
+  for (i in 1:n){
+    print(paste("cluster",i,"of",n))
+    sql=paste(q, round(ramin[i], 5), "and", round(ramax[i], 5), "and dec between", 
+              round(decmin[i], 5), "and", round(decmax[i], 5), "and p.z between", 
+              round(zmin[i], 7), "and", round(zmax[i], 7))
+    df=SkyServer.sqlSearch(sql, dataRelease=DR)
+    if(nrow(df) == 0) next;
+    setorder(df, objID, zErr)
+    wd=which(duplicated(df$objID))
+    if(length(wd)!=0) df=df[-wd]
+    cen=unlist(cls[i,1:3])
+    ps=pps(df$ra, df$dec, df$z, cen[1], cen[2], cen[3], Om=Om, H0=H0)
+    df=data.table(cl_id=cls$id[i], cl_ra=cen[1], cl_dec=cen[2], cl_z=cen[3], df, ps)
+    df=df[dproj < Rmax]
+    specid=df$specObjID
+    if(class(specid)!='integer64') df$specObjID=as.integer64(specid)
+    mem[[i]]=df
+  }
+  mem=data.table(do.call(rbind, mem))
+  return(mem)
+}
+
 # Limiting mass completeness calculation following Pozzetti et al. (2010)
 masscomp=function(z, mag, mass, nbin=10, ...){
   df=na.omit(data.frame(z, mag, mass))
@@ -4431,13 +4506,17 @@ weighted.var=function(x, w, na.rm = FALSE){
 }
 
 # Find redshift limit with maximum number of objects in a complete sample
-zopt=function(z, Mr, OM=0.3, OL=1-OM, H0=70){
+zopt=function(z, Mr, OM=0.3, OL=1-OM, H0=70, plot=T){
   # require absmag()
-  d=cbind(z, Mr)
-  f=function(z, d) sum(d[,1]<=z & d[,2]<=absmag(z, OM=OM, H0=H0))
-  n=optimise(f, range(z), d, maximum = T)
-  r=c('z'=n[[1]], 'mag'=absmag(n[[1]], OM=OM, H0=H0), 'N'=n[[2]])
-  return(r)
+  d=na.omit(cbind(z, Mr))
+  fopt=function(z, d) sum(d[,1]<=z & d[,2]<=absmag(z, OM=OM, H0=H0))
+  n=optimise(fopt, range(d[,1]), d, maximum = T)
+  r=c('zlim'=n[[1]], 'Mr'=absmag(n[[1]], OM=OM, H0=H0), 'N'=n[[2]])
+  if(plot){
+    plot(d[,1], d[,2], pch='.', xlab='z', ylab='Mr', ylim=rev(range(d[,2])))
+    abline(v=r[1], h=r[2], col='red')
+  }
+  return(round(r,4))
 }
 
 # Geometric Histogram Separation for using in hd.test function
@@ -4475,12 +4554,13 @@ ghs.hd=function(x1, x2, plot=T){
 # Gaussianity indicator using the HD distance separation
 # require the HD_simulations.RDS file!
 hd.test=function(x, Nsamp=1000, bd.file='HD_simulations.RDS', plot=T){
+  # require the ghs.hd() function
   # x: vector of the LOS cluster velocities inside R200
   require(distrEx)
   db=readRDS(bd.file)
   n=length(x)
-  if(length(x)<10) 
-    stop('too few elements - at least 10 values are needed')
+  if(length(x)<10 | length(x)>253) 
+    stop('number of points out of range - must be between 10 and 253')
   sim=db[,n]
   hns=function(x) (4/(length(x)*3))^(1/5)*sd(x)
   x=(x-mean(x))/sd(x)
@@ -4496,7 +4576,6 @@ hd.test=function(x, Nsamp=1000, bd.file='HD_simulations.RDS', plot=T){
   comp=ghs.hd(log10(sim), log10(hdr), plot=plot)
   u=1-comp[[1]]
   R2=comp[[2]]
-  #r=ghc(log10(sim), log10(hdr), plot=plot)
   if(plot){
     mtext(bquote(N==.(n)), line=.5, adj=.1)
     mtext(bquote(ghu==.(round(u,3))), line=.5, adj=.5)
@@ -4506,4 +4585,51 @@ hd.test=function(x, Nsamp=1000, bd.file='HD_simulations.RDS', plot=T){
   } 
   res=list('ghu'=u, 'R2'=R2, 'HD_values'=hdr)
   return(invisible(res))
+}
+
+# Random number generation of bimodal dist from two normal dist 
+# with further validation from the dip test
+rbimod=function(n, min.prop=0.1, mean.range=c(0,20), sd.range=c(.5,2)){
+  # min.prop: minimum proportion of point in each mode
+  require(truncnorm)
+  require(diptest)
+  a=-Inf; b=Inf
+  pval=1
+  while(pval>0.05){
+    n1=as.integer(runif(1,n*min.prop,n-n*min.prop))
+    n2=n-n1
+    ms=runif(2,mean.range[1],mean.range[2])
+    sds=runif(2,sd.range[1],sd.range[2])
+    r1=rtruncnorm(n1, a, b, ms[1], sds[1])
+    r2=rtruncnorm(n2, a, b, ms[2], sds[2])
+    r=c(r1,r2)
+    pval=dip.test(r)$p.value
+    #print(round(c(n1,n2,ms[1],ms[2],sds[1],sds[2],pval),3))
+  }
+  return(r)
+}
+
+# Get the luminosity weighted center from absolute magnitudes
+lwcent=function(ra, dec, z, Mr){
+  require(spatstat.geom)
+  Lr=10^(-0.4*Mr)
+  w=(Lr-min(Lr))/max(Lr-min(Lr))
+  cen=c(weighted.median(ra, w),weighted.median(dec, w),weighted.median(z, w))
+  return(cen)
+}
+
+# get points for plotting histogram as lines
+shist=function(x, nbins='Sturges', xlim=range(x,na.rm=T), freq=T, norm=F){
+  # nbins can be the desired number of bins
+  # norm if TRUE normalizes the histogram
+  if(is.numeric(nbins))
+    nbins=seq(xlim[1], xlim[2], length.out=nbins+1)
+  h=hist(x, breaks=nbins, plot=F)
+  b=h$breaks; c=h$counts
+  if(!freq) c=h$density
+  if(norm) c=c/max(c)
+  c=rep(c, each=2); c=c(0,c,0)
+  b=rep(b, each=2)
+  df=data.frame(breaks=b, counts=c)
+  return(df)
 }

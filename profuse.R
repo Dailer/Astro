@@ -18,7 +18,7 @@ profuseAllStarFound2Fit = function(image,
   if(!requireNamespace("ProFound", quietly = TRUE)){stop('The ProFound package is required to run this function!')}
 
   image[image < quantile(image, 0.01, na.rm=TRUE)*10] = NA
-  #image[image > quantile(image, 0.99, na.rm=TRUE)*10] = NA
+  image[image > quantile(image, 0.99, na.rm=TRUE)*10] = NA
 
   if(is.null(segim)){
     mini_profound = ProFound::profoundProFound(
@@ -364,7 +364,7 @@ profuseFound2Fit = function(image,
   }
 
   image[image < quantile(image, 0.01, na.rm=TRUE)*10] = NA
-  image[image > quantile(image, 0.99, na.rm=TRUE)*10] = NA
+  #image[image > quantile(image, 0.99, na.rm=TRUE)*10] = NA
 
   if(!is.null(loc)){
     cutim = magicaxis::magcutout(image, loc = loc, box = cutbox)

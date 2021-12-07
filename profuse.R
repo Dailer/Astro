@@ -240,8 +240,8 @@ profuseAllStarDoFit = function(image,
   uppers[unlist(Data$tolog) == T] = log10(uppers[unlist(Data$tolog) == T])
   uppers = uppers[which(unlist(Data$tofit))]
 
-  message('Running Highander')
-  if(!requireNamespace("ProFound", quietly = TRUE)){stop('The Highander package is required to run this function!')}
+  message('Running Highlander')
+  if(!requireNamespace("ProFound", quietly = TRUE)){stop('The Highlander package is required to run this function!')}
   highfit = Highlander::Highlander(
     parm = Data$init,
     Data = Data,
@@ -949,7 +949,7 @@ profuseDoFit = function(image,
   uppers = uppers[which(unlist(Data$tofit))]
 
   message('Running Highlander')
-  if(!requireNamespace("ProFound", quietly = TRUE)){stop('The Highander package is required to run this function!')}
+  if(!requireNamespace("ProFound", quietly = TRUE)){stop('The Highlander package is required to run this function!')}
   highfit = Highlander::Highlander(
     parm = Data$init,
     Data = Data,
@@ -1410,8 +1410,8 @@ profuseMultiBandDoFit = function(image_list,
   lower = c(lower_profit, MF2F$intervals_ProSpect$lo)
   upper = c(upper_profit, MF2F$intervals_ProSpect$hi)
 
-  message('Running Highander on multi-band data')
-  if(!requireNamespace("ProFound", quietly = TRUE)){stop('The Highander package is required to run this function!')}
+  message('Running Highlander on multi-band data')
+  if(!requireNamespace("ProFound", quietly = TRUE)){stop('The Highlander package is required to run this function!')}
   highfit = Highlander::Highlander(
     parm = MF2F$init,
     Data = MF2F,

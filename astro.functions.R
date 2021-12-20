@@ -252,13 +252,17 @@ fracbin=function(x, class, nbin='hist', method='length', error='binomial', plot=
 }
 
 # Median values of continuous y in bins of continuous x
-medbin=function(x, y, nbin='hist', method='length', err.type='ci', min.cts=1, plot=T, lim=NULL, 
-                xlab=NULL, ylab=NULL, poly=F, add=F, col=1, cex.axis=1, cex.lab=1, ...){
+medbin=function(x, y, nbin='hist', method='length', err.type='ci', min.cts=1, plot=T, 
+                ylim=NULL, xlim=range(x, na.rm = T), xlab=NULL, ylab=NULL, 
+                poly=F, add=F, col=1, cex.axis=1, cex.lab=1, ...){
   # nbin can be an integer, a vector or 'hist'
   # method can be 'length', 'content' or 'clusters', only applies if nbin is numeric
   # err.type can be 'ci' (mean and 95% CI) or 'q' (median and quantile error)
   stopifnot(is.numeric(nbin) | nbin=='hist')
   df=na.omit(data.frame(x, y))
+  df=subset(df, x>=xlim[1] & x<=xlim[2])
+  if(method=='c') method='content'
+  if(method=='l') method='length'
   
   if(is.numeric(nbin) & length(nbin)==1){
     require(OneR)
@@ -311,13 +315,13 @@ medbin=function(x, y, nbin='hist', method='length', err.type='ci', min.cts=1, pl
   d=subset(d, N>=min.cts)
   if(plot){
     require(magicaxis)
-    #if(is.null(lim)) lim=range(c(d$lower,d$upper))
-    if(is.null(lim)) lim=range(y, na.rm=T)
+    #if(is.null(ylim)) ylim=range(c(d$lower,d$upper))
+    if(is.null(ylim)) ylim=range(y, na.rm=T)
     if(!add){
       rg=max(d$bin)-min(d$bin)
       xrg=c(min(d$bin)-0.02*rg, max(d$bin)+0.02*rg)
       magplot(xrg, range(c(d$lower,d$upper)), pch='', side=1:4, labels=c(1,1,0,0),
-              las=1, ylab=ylab, xlab=xlab, ylim=lim, family=par()$family,  
+              las=1, ylab=ylab, xlab=xlab, ylim=ylim, family=par()$family,  
               cex.axis=cex.axis, cex.lab=cex.lab)
       #grid(lty=1, col='#0000001A')
     }
@@ -1695,14 +1699,14 @@ kruskalmc=function(resp, data=NULL, probs=0.05, cont=NULL){
 
 # Geometric histogram separation from Sutter & Barchi (2017)
 ghs=function(x1, x2, plot=T){
-  h1=hist(x1, plot = F)
-  h2=hist(x2, plot = F)
+  h1=hist(x1, plot=F)
+  h2=hist(x2, plot=F)
   both=c(h1$breaks, h2$breaks)
   n=length(both)-1 # number of total bins
   rnge=range(both)
   breaks=seq(rnge[1], rnge[2], length.out = n+1)
-  h1=hist(x1, breaks, plot = F)
-  h2=hist(x2, breaks, plot = F)
+  h1=hist(x1, breaks, plot=F)
+  h2=hist(x2, breaks, plot=F)
   dx=diff(rnge)/n
   dy=apply(cbind(h1$density, h2$density), 1, min) # min of intersection
   ao=sum(dx*dy) # the relative area 
@@ -2268,7 +2272,9 @@ varprof=function(x, y, Nb=1000, N=100, err.type='q', norm=F, plot=T, smooth=T){
   y=y[order(x)]; x=sort(x)
   #r=seq(0, max(x), length.out = N)
   r=seq(min(x), max(x), length.out = N)
-  hw=biwScale(x)
+  #hw=biwScale(x)
+  hw=2*ks::hns(x, 2)
+  #hw=3*bw.nrd0(x)
   sv=vector(length = Nb)
   sr=matrix(NA, N, Nb)
   pb=txtProgressBar(0, N, style=3)
@@ -2281,6 +2287,7 @@ varprof=function(x, y, Nb=1000, N=100, err.type='q', norm=F, plot=T, smooth=T){
     sr[i,]=sv
     setTxtProgressBar(pb, i)
   }
+  close(pb)
   if(err.type=='q'){
     s=apply(sr, 1, biwLoc)
     sds=apply(sr, 1, biwScale)
@@ -2316,9 +2323,8 @@ CASNN=function(ra, dec, DR='DR12', tablename='temp', verbose=T){
   require(data.table)
   require(SciServer)
   tbldrp=tryCatch(SkyQuery.dropTable(tablename), error=function(e){})
-  Name = 'dailer';
-  Password = 0x540a438
-  Authentication.login(Name, Password);
+  if(is.null(Authentication.token))
+    Authentication.login('dailer', 0x540a438)
   radec=data.frame(id=1:length(ra), ra=ra, dec=dec)
   if(verbose) message('Uploading data to MyDB')
   CasJobs.uploadDataFrameToTable(radec, tablename)
@@ -2367,19 +2373,19 @@ CASPH=function(objid, DR='DR12', tablename='temp'){
   require(SciServer)
   require(bit64, quietly = T)
   tbldrp=tryCatch(SkyQuery.dropTable(tablename), error=function(e){})
-  Name = 'dailer';
-  Password = 0x540a438
-  Authentication.login(Name, Password);
+  if(is.null(Authentication.token))
+    Authentication.login('dailer', 0x540a438)
   message('Uploading data to MyDB')
   objid[is.na(objid)]=1e18
   data=data.frame(id=1:length(objid), objid=as.integer64(objid))
   CasJobs.uploadDataFrameToTable(data, tablename)
   query='select
-  id, t.objid, ra, dec, run, rerun, camcol, field, petroR50_r, petroR90_r,
-  petroMag_u as upmag, 
-  petroMagErr_u as upmag_err, petroMag_g as gpmag, petroMagErr_g as gpmag_err, 
-  petroMag_r as rpmag, petroMagErr_r as rpmag_err, petroMag_i as ipmag, 
-  petroMagErr_i as ipmag_err, petroMag_z as zpmag, petroMagErr_z as zpmag_err, 
+  id, t.objid, ra, dec, run, rerun, camcol, field, deVRad_r, 
+  expRad_r, deVAB_r, expAB_r,
+  petroR50_r, petroR90_r, petroMag_u as upmag, petroMagErr_u as upmag_err, 
+  petroMag_g as gpmag, petroMagErr_g as gpmag_err, petroMag_r as rpmag, 
+  petroMagErr_r as rpmag_err, petroMag_i as ipmag, petroMagErr_i as ipmag_err, 
+  petroMag_z as zpmag, petroMagErr_z as zpmag_err, 
   extinction_u as ext_u, extinction_g as ext_g, extinction_r as ext_r, 
   extinction_i as ext_i, extinction_z as ext_z
   from MyDB.temp as t 
@@ -2391,6 +2397,7 @@ CASPH=function(objid, DR='DR12', tablename='temp'){
   q=fread(q)
   q[q=='null' | q==-9999 | q=='-9999']=NA
   q[,3:ncol(q)]=lapply(q[,3:ncol(q)], as.numeric)
+  q=round(q,5)
   tryCatch(SkyQuery.dropTable(tablename), 
            error=function(e) message('Warning: could not drop table from MyDB'))
   return(q)
@@ -2402,9 +2409,8 @@ CASPEC=function(objid, DR='DR12', tablename='temp', verbose=T){
   require(SciServer)
   require(bit64, quietly = T)
   tbldrp=tryCatch(SkyQuery.dropTable(tablename), error=function(e){})
-  Name = 'dailer';
-  Password = 0x540a438
-  Authentication.login(Name, Password);
+  if(is.null(Authentication.token))
+    Authentication.login('dailer', 0x540a438)
   objid[is.na(objid)]=1e18
   data=data.frame(id=1:length(objid), objid=as.integer64(objid))
   if(verbose) message('Uploading data to MyDB')
@@ -2434,7 +2440,6 @@ CASPEC=function(objid, DR='DR12', tablename='temp', verbose=T){
     left join SpecObjAll as s on s.bestObjID=t.objid 
     order by id'
   }
-  
   if(verbose) message('Executing query')
   q=CasJobs.executeQuery(query, context=DR, format="csv")
   if(verbose) message('Done')
@@ -2456,6 +2461,53 @@ CASPEC=function(objid, DR='DR12', tablename='temp', verbose=T){
   return(q)
 }
 
+CASPEClite=function(objid, DR='DR12', tablename='temp', verbose=T){
+  require(data.table)
+  require(SciServer)
+  require(bit64, quietly = T)
+  tbldrp=tryCatch(SkyQuery.dropTable(tablename), error=function(e){})
+  if(is.null(Authentication.token))
+    Authentication.login('dailer', 0x540a438)
+  objid[is.na(objid)]=1e18
+  data=data.frame(id=1:length(objid), objid=as.integer64(objid))
+  if(verbose) message('Uploading data to MyDB')
+  CasJobs.uploadDataFrameToTable(data, tablename)
+  dr=as.integer(strsplit(DR, 'DR')[[1]][2])
+  if(dr>=12){
+    query='select
+    id, s.bestobjID as objid, s.specObjID as specobjid, s.z as zspec, s.zErr,
+    zWarning as zW, bptclass as bpt, lgm_tot_p50 as smass, sfr_tot_p50 as sfr, 
+    specsfr_tot_p50 as ssfr, d4000_n as d4000n
+    from MyDB.temp as t 
+    left join SpecObjAll as s on s.bestObjID=t.objid 
+    left join galSpecExtra as x on s.specObjID=x.specObjID
+    left join galSpecIndx as i on s.specObjID=i.specObjID
+    order by id'
+  }else{
+    query='select
+    id, s.bestobjID as objid, s.specObjID as specobjid, s.z as zspec, s.zErr,
+    zWarning as zW, sciencePrimary as prim, s.plate, s.mjd, s.fiberid, s.eClass
+    from MyDB.temp as t 
+    left join SpecObjAll as s on s.bestObjID=t.objid 
+    order by id'
+  }
+  if(verbose) message('Executing query')
+  q=CasJobs.executeQuery(query, context=DR, format="csv")
+  if(verbose) message('Done')
+  q=fread(q)
+  q[q=='null' | q==-9999]=NA
+  q[,4:ncol(q)]=lapply(q[,4:ncol(q)], as.numeric)
+  q=setorder(q, id, zErr, na.last = T)
+  wq=which(duplicated(q$id))
+  if(length(wq)>0) q=q[-wq]
+  q$objid=as.integer64(q$objid)
+  q$specobjid=as.integer64(q$specobjid)
+  #dt=merge(data.table(data), q[,-2], by='id', all.x=T, sort=F)
+  tryCatch(SkyQuery.dropTable(tablename, datasetName="MyDB"), 
+           error=function(e) message('Warning: could not drop table from MyDB'))
+  return(q)
+}
+
 CASPECloop=function(objid, n=1000, DR='DR12', tablename='temp'){
   data=data.table(objid)
   nr=nrow(data)
@@ -2467,7 +2519,7 @@ CASPECloop=function(objid, n=1000, DR='DR12', tablename='temp'){
   pb=txtProgressBar(0, l, 0, '=', style=3)
   for(i in 1:l){
     d=sp[[i]]
-    cp=CASPEC(d$objid, DR=DR, tablename=tablename, verbose = F)
+    cp=CASPEClite(d$objid, DR=DR, tablename=tablename, verbose = F)
     cp$id=cp$id+nrs[i]
     dl[[i]]=cp
     setTxtProgressBar(pb, i)
@@ -2482,9 +2534,8 @@ CASPEC2=function(specid, DR='DR12', tablename='temp', verbose=T){
   require(SciServer)
   require(bit64, quietly = T)
   tbldrp=tryCatch(SkyQuery.dropTable(tablename), error=function(e){})
-  Name = 'dailer';
-  Password = 0x540a438
-  Authentication.login(Name, Password);
+  if(is.null(Authentication.token))
+    Authentication.login('dailer', 0x540a438)
   specid[is.na(specid)]=1e18
   data=data.frame(id=1:length(specid), specid=as.integer64(specid))
   if(verbose) message('Uploading data to MyDB')
@@ -2514,7 +2565,6 @@ CASPEC2=function(specid, DR='DR12', tablename='temp', verbose=T){
     left join SpecObjAll as s on s.specObjID=t.specid
     order by id'
   }
-  
   if(verbose) message('Executing query')
   q=CasJobs.executeQuery(query, context=DR, format="csv")
   if(verbose) message('Done')
@@ -3874,7 +3924,7 @@ oner_breaks=function(x, n, method='content'){
   b=c(min(bks), ib, max(bks))
   names(b)=NULL
   tb=median(table(bn))
-  message('Median content: ',tb)
+  message('Median content per bin: ',tb)
   return(b)
 }
 
@@ -3929,9 +3979,7 @@ density.plot=function(x, y=NULL, n=100, col=NULL, fillcol=NA, norm=F, contours=F
   require(magicaxis)
   if(is.null(y)){
     den=density(x, na.rm = T)
-    if(norm){
-      den$y=den$y/max(den$y)
-    }
+    if(norm) den$y=den$y/max(den$y)
     if(is.null(col)) col='black'
     if(add){
       polygon(den$x, den$y, col=fillcol, border=NA)
@@ -3939,6 +3987,7 @@ density.plot=function(x, y=NULL, n=100, col=NULL, fillcol=NA, norm=F, contours=F
     }else{
       ylab=ifelse(norm, 'Normalized Density', 'Density')
       magplot(den, col=col[1], ylab=ylab, ...)
+      if(!is.na(fillcol)) polygon(den$x, den$y, col=fillcol, border=NA)
     }
   }else{
     require(MASS)
@@ -4619,7 +4668,7 @@ lwcent=function(ra, dec, z, Mr){
 }
 
 # get points for plotting histogram as lines
-shist=function(x, nbins='Sturges', xlim=range(x,na.rm=T), freq=T, norm=F){
+shist=function(x, nbins='Sturges', xlim=range(x,na.rm=T), freq=T, norm=F, plot=T){
   # nbins can be the desired number of bins
   # norm if TRUE normalizes the histogram
   if(is.numeric(nbins))
@@ -4631,5 +4680,88 @@ shist=function(x, nbins='Sturges', xlim=range(x,na.rm=T), freq=T, norm=F){
   c=rep(c, each=2); c=c(0,c,0)
   b=rep(b, each=2)
   df=data.frame(breaks=b, counts=c)
+  if(plot) 
+    plot(df, type='s', panel.first=abline(h=0, col='gray'), xlab='x')
   return(df)
+}
+
+# Creates histograms type plots (type='s') of several values
+multshist=function(x, nbin=10, xlim=NULL, freq=T, norm=F){
+  # 'x' must be a list of values
+  # 'nbins' is the desired number of bins
+  # 'xlim' if NULL uses the range of all the values
+  # 'norm' if TRUE normalizes the histogram
+  n=length(x)
+  if(!is.null(xlim)) 
+    x=lapply(x, function(x) x=x[x>xlim[1] & x<xlim[2]])
+  rng=range(sapply(x, range, na.rm=T))
+  if(is.null(xlim)) xlim=rng
+  breaks=seq(rng[1], rng[2], length.out=nbin+1)
+  hid=ifelse(freq, 2, 3)
+  counts=sapply(x, function(x) hist(x, breaks=breaks, plot=F)[[hid]])
+  if(norm) 
+    counts=apply(counts, 2, function(x) x/max(x))
+  brk=rep(breaks, each=2)
+  cts=apply(counts, 2, function(x) c(0,rep(x, each=2),0))
+  for(i in 1:n){
+    if(i==1){
+      ylab=ifelse(norm, 'normalized counts', 'counts')
+      ylab=ifelse(freq, ylab, 'density')
+      plot(brk, cts[,i], type='s', col=i+1, ylim=c(0,max(cts)), xlab='x', 
+           ylab=ylab, xlim=xlim)
+      abline(h=0, col='gray')
+    }else if(n>1){
+      lines(brk, cts[,i], type='s', col=i+1)
+    }
+  }
+  df=data.frame(brk,cts)
+  colnames(df)=gsub('X','Y',colnames(df))
+  colnames(df)[1]='X'
+  l=list('histograms'=list(breaks=breaks,counts=counts), 
+         'values_to_plot'=df)
+}
+
+# Emulate ggplot2 discrete color palette
+ggcolor=function(n){
+  hues=seq(15, 375, length=n+1)
+  hcl(h = hues, l = 65, c = 100)[1:n]
+}
+
+# Get image for a galaxy in the SDSS DR7/DR12 field from the object ID
+getSDSSimage=function(objid, filter='r', size=700, usr='', pwd='', plot=T, verbose=T, save=F){
+  # 'objid' is the photometric object ID (only one) from the SDSS DR7 or DR12
+  # 'filter' is one from: u,g,r,i,z
+  # 'size' is the pixel dimensions of the final squared image for the object
+  # 'usr' and 'pwd' are the credentials of a CasJobs account
+  # 'save' if TRUE, the final image is saved to the working dir as an RDS object
+  require(SciServer)
+  require(FITSio)
+  require(R.utils)
+  require(magicaxis)
+  require(celestial)
+  if(verbose) 
+    message('Authenticating in CasJobs and executing SQL query to get photometric info')
+  Authentication.login(usr, pwd)
+  if(strsplit(objid[1],'')[[1]][1]=='5') DR='DR7'
+  if(strsplit(objid[1],'')[[1]][1]=='1') DR='DR12'
+  sql_query='select ra, dec, run, rerun, camcol, field from PhotoObjAll where objID='
+  sql_query=paste0(sql_query,objid)
+  qr=CasJobs.executeQuery(sql_query, context=DR)
+  if(verbose) message('Downloading field image from SDSS')
+  dir='https://dr12.sdss.org/sas/dr12/boss/photoObj/frames/301/'
+  link=paste0(dir,qr$run,'/',qr$camcol,'/frame-',filter,'-',sprintf("%06.f",qr$run),
+              '-',qr$camcol,'-',sprintf("%04.f",qr$field),'.fits.bz2')
+  dest=tail(unlist(strsplit(link, "/")),1)
+  download.file(link, dest)
+  if(verbose) message('Unzipping, cutting field image around the object and plotting')
+  bunzip2(dest, overwrite=T)
+  name=strsplit(dest,'.bz2')[[1]]
+  fit=readFITS(name)
+  pixscale=getpixscale(fit$hdr)
+  boxsize=rep(round(size*pixscale), 2)
+  wcs=c(qr$ra, qr$dec)
+  imcut=magcutoutWCS(fit$imDat, fit$hdr, wcs, box=boxsize)$image
+  if(plot) magimage(imcut)
+  if(save) saveRDS(imcut,paste0(name,'.RDS'))
+  return(invisible(imcut))
 }

@@ -131,8 +131,8 @@ cornerplot=function(chains, samples=NULL, labels=NULL, histbins=30, lim=NULL,
 set.seed(123)
 ch1=rnorm(1e6)
 ch2=rgamma(1e6,10)
-ch3=ch1+1*runif(1e6)
+ch3=ch1+runif(1e6)
 chains=cbind(ch1,ch2,ch3)
 labels=c(expression(alpha),expression(beta),expression(gamma))
-cornerplot(chains=chains, labels=labels, samples=5e4, drawpoints = T)
+cornerplot(chains=chains, labels=labels, samples=5e4, drawpoints=T)
 

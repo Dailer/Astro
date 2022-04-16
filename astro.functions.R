@@ -156,7 +156,8 @@ fracbin=function(variable, classe, nbin='hist', error='binomial', plot=T, erbar=
   #co=rainbow(lencl+1)
   #co=sample(co, lencl)
   if(plot==TRUE){
-    magplot(dfin$bin, rep(0, length(dfin$bin)), ylim = c(-0.05,1.05), pch='', ylab = 'Fraction', ...)
+    magplot(dfin$bin, rep(0, length(dfin$bin)), ylim = c(-0.05,1.05), pch='', 
+            ylab = 'Fraction', ...)
     abline(h=c(0,1), lty=2, col='gray')
     for(w in 1:lencl){
       points(dfin$bin, dfin[,w+1], pch=w-1, col=co[w], type='b')
@@ -165,11 +166,12 @@ fracbin=function(variable, classe, nbin='hist', error='binomial', plot=T, erbar=
           lwind=grep(lwnm, colnames(dfin))
           uppind=lwind+1
           if(error=='binomial'){
-            errbar(dfin$bin, dfin[,w+1], dfin[,lwind], dfin[,uppind], add=T, pch='', errbar.col=co[w])
+            errbar(dfin$bin, dfin[,w+1], dfin[,lwind], dfin[,uppind], add=T, 
+                   pch='', errbar.col=co[w])
           }
           if(error=='bootstrap'){
-            errbar(dfin$bin, dfin[,w+1], dfin[,w+1]+dfin[,lwind], dfin[,w+1]-dfin[,uppind], 
-                   add=T, pch='', errbar.col=w+1)
+            errbar(dfin$bin, dfin[,w+1], dfin[,w+1]+dfin[,lwind], 
+                   dfin[,w+1]-dfin[,uppind], add=T, pch='', errbar.col=w+1)
           }
         }
     }
@@ -225,8 +227,8 @@ fracbin=function(x, class, nbin='hist', method='length', error='binomial', plot=
   }
   if(plot){
     if(is.null(cols)){
-      cols=c('#3B4992','#008B45','#EE0000','#631879','#008280','#BB0021','#BB0021','#5F559B',
-             '#808180','#1B1919')
+      cols=c('#3B4992','#008B45','#EE0000','#631879','#008280','#BB0021',
+             '#BB0021','#5F559B','#808180','#1B1919')
     }
     pchs=c(16,0,17,15,4,1,8,2,3,7,5,9,6,10,11,18,12,13,14)
     require(magicaxis)
@@ -319,7 +321,7 @@ medbin=function(x, y, nbin='hist', method='length', err.type='ci', min.cts=1, pl
     if(is.null(ylim)) ylim=range(y, na.rm=T)
     if(!add){
       rg=max(d$bin)-min(d$bin)
-      xrg=c(min(d$bin)-0.02*rg, max(d$bin)+0.02*rg)
+      xrg=c(min(d$bin)-0.05*rg, max(d$bin)+0.05*rg)
       magplot(xrg, range(c(d$lower,d$upper)), pch='', side=1:4, labels=c(1,1,0,0),
               las=1, ylab=ylab, xlab=xlab, ylim=ylim, family=par()$family,  
               cex.axis=cex.axis, cex.lab=cex.lab)
@@ -338,14 +340,16 @@ medbin=function(x, y, nbin='hist', method='length', err.type='ci', min.cts=1, pl
       d$upper=s_upper
     }else{
       points(d$bin, d[,2], type='b', col=col, ...)
-      arrows(d$bin, d$lower, d$bin, d$upper, length=.05, code=3, angle=90, col=col, ...)
+      arrows(d$bin, d$lower, d$bin, d$upper, length=.05, code=3, angle=90, 
+             col=col, ...)
     }
   }
   return(invisible(round(d, 4)))
 }
 
 # Median values of continuous x in y classes
-medclass=function(x, y, err.type='ci', lim=range(x, na.rm=T), lab='', plot=T, add=F, ...){
+medclass=function(x, y, err.type='ci', lim=range(x, na.rm=T), lab='', plot=T, 
+                  add=F, ...){
   # err.type can be 'ci' (mean and 95% CI) or 'q' (median and quantile error)
   cn=levels(factor(y))
   n=length(cn)
@@ -366,7 +370,8 @@ medclass=function(x, y, err.type='ci', lim=range(x, na.rm=T), lab='', plot=T, ad
   if(plot){
     require(magicaxis)
     if(!add){
-      magplot(c(0.8,n+0.2), range(x, na.rm=T), pch='', side=2, las=1, ylab=lab, ylim=lim)
+      magplot(c(0.8,n+0.2), range(x, na.rm=T), pch='', side=2, las=1, ylab=lab, 
+              ylim=lim)
       magaxis(1, majorn=n, minorn=0, xlab='class', labels = F)
       axis(1, 1:n, cn, tick = F, line=-0.5)
       grid(nx=NA, ny=NULL, lty=1, col='#0000001A') 
@@ -379,8 +384,10 @@ medclass=function(x, y, err.type='ci', lim=range(x, na.rm=T), lab='', plot=T, ad
   return(invisible(data))
 }
 
-# fractions of x classes in y classes with CI (95%) and test of proportion (if y has two classes)
-propclass=function(x, y, type=1, plot=T){
+# fractions of x classes in y classes with CI 
+# and test of proportion (if y has two classes)
+propclass=function(x, y, type=1, conf.level=0.95, methods='prop.test',
+                   xlab='class', col=NULL, plot=T,...){
   # type 1: twoSamplePermutationTestProportion
   # type 2: prop.test
   require(binom)
@@ -389,13 +396,14 @@ propclass=function(x, y, type=1, plot=T){
   n=nrow(tb)
   pt=round(prop.table(tb, 2), 3)
   trials=apply(tb, 2, sum)
-  bconf=binom.confint(c(tb), rep(trials,each=n), 0.95, 'exact')
+  bconf=binom.confint(c(tb), rep(trials,each=n), conf.level, methods)
   bconf=round(bconf[,5:6], 3)
   bconf=split(bconf, rep(1:l, each=n))
   names(bconf)=names(trials)
   bconf=do.call(cbind, bconf)
   rownames(bconf)=rownames(tb)
-  if(l>2) message('Warning: y must have two classes to perform the proportion test')
+  if(l>2) 
+    cat('\nProportion test not performed as you must have two classes in y\n')
   if(l==2){
     if(type==1) require(EnvStats)
     k="Number Successes and Trials"
@@ -410,36 +418,41 @@ propclass=function(x, y, type=1, plot=T){
       }
     }
     m=cbind(pt, p.value=round(pvs,3))
-    m=data.frame(m, diff=pvs<0.05)
-    cat('Fractions of x in y and proportion test p-value\n')
+    m=data.frame(m, signif=pvs<0.05)
+    cat('Fractions of x in y with CI and proportion test p-value\n')
   }else{ 
-    cat('Fractions of x in y\n')
+    cat('Fractions of x in y with CI\n')
     m=as.data.frame(cbind(pt))
   }
   if(plot){
     pch=c(16,0,17,3,15,4,1,8,2,7,5,9,6,10,11,18,12,13,14)
-    col=c('#0F5AB0','#EE2111','#1A983D','#EC569A','#FB6B0C',
-          '#1A9BED','#A1C721','#FEC10F','#1CA08C','#9A703E')
-    la=seq(1, ncol(bconf), 2); ua=la+1
-    if(is.numeric(y)) xn=as.numeric(names(trials))
-    if(is.character(y)) xn=1:l
-    for(i in 1:n){
-      if(i==1){
-        plot(xn, unlist(m[1,1:l]), pch=16, type='b', ylim=range(m), ylab='fraction',
-             col=col[1], xlab='class', panel.first = grid(), axes=F)
-        axis(1, xn, sort(unique(y[!is.na(y)]))); axis(2); box()
-        arrows(xn, unlist(bconf[1,la]), xn, unlist(bconf[1,ua]), length = 0,
-               col=col[1])
-      }else{
-        points(xn, unlist(m[i,1:l]), pch=pch[i], type='b', col=col[i])
-        arrows(xn, unlist(bconf[i,la]), xn, unlist(bconf[i,ua]), length = 0,
-               col=col[i])
-      }
+    if(is.null(col)){
+      col=c('#0F5AB0','#EE2111','#1A983D','#EC569A','#FB6B0C',
+            '#1A9BED','#A1C721','#FEC10F','#1CA08C','#9A703E')
     }
-    legend('right', pch=pch[1:n], lty=1, col=col[1:n], bty='n', y.intersp=.7, 
-           legend=rownames(m))
+    plot(c(1,n), range(bconf), pch='', ylab='Fraction', xaxt='n', xlab=xlab,
+         xlim=c(1-n/20,n+n/20))
+    axis(1, 1:n, rownames(tb))
+    la=seq(1, 2*l, 2); ua=la+1
+    for(i in 1:l){
+      points(1:n, m[,i], pch=pch[i], col=col[i], type='b',...)
+      arrows(1:n, bconf[,la[i]], 1:n, bconf[,ua[i]], len=.03, cod=3, ang=90,
+             col=col[i])
+    }
+    legend('topright',pch=pch[1:l],col=col[1:l],leg=colnames(tb),bty='n',
+           y.int=.7, x.int=.5)
   }
-  return(list(fractions=m, CI=bconf))
+  colnames(bconf)=gsub('lower','low',colnames(bconf))
+  colnames(bconf)=gsub('upper','upp',colnames(bconf))
+  fci=cbind(m,bconf)
+  f=function(x) c(x,paste(x,c('low','upp'),sep='.'))
+  cnm=unlist(lapply(colnames(tb), f))
+  if(l>2){
+    fci=fci[,cnm]
+  }else if(l==2){
+    fci=fci[,c(cnm,'p.value','signif')]
+  }
+  return(fci)
 }
 
 # Function for download images from 6df web site
@@ -645,11 +658,12 @@ matchdist=function(radec1, radec2, maxdist=0.1, conv=3600){
   
   df4=data.frame(index.1=df3$id, index.2=df3$idx, distance=df3$dist)
   
-  hist(df4$distance, breaks=round(nrow(df4)/100), main='Histogram of distance', xlab='distance (arcsec)')
+  hist(df4$distance, breaks=round(nrow(df4)/100), main='Histogram of distance', 
+       xlab='distance (arcsec)')
   lrej=length(which(is.na(df4$distance)))
   nr=nrow(radec1)
   mtext(paste0('Distance < ', maxdist, ' arcsec'), line = -2, adj = .8)
-  mtext(paste0('Rejected: ', lrej,' (', round(lrej*100/nr, 1), '%)'), line = -4, adj = .8)
+  mtext(paste0('Rejected: ', lrej,' (',round(lrej*100/nr, 1), '%)'), line=-4, adj=.8)
   
   # cl=ifelse(df$dist > maxdist, 2, 1)
   # df=data.frame(df, col=cl)
@@ -698,25 +712,21 @@ galname=function(name){
 
 # Function for make composite image from SDSS DR12
 rgbimage=function(radec, size=120, R='i', G='r', B='g', DR=12){
-  
   start.time=Sys.time()
   nr=nrow(radec)
   n=seq_len(nr)
   #radec=cbind(id=n, radec)
   wna=c()
   rdcn=colnames(radec)
-  
   if('name' %in% rdcn == TRUE){
-    cat('Object name input, retrieving coordinates from http://simbad.u-strasbg.fr... \n')
+    cat('Object name input, retrieving coordinates from SIMBAD... \n')
     glname=as.character(radec$name)
     gn=galname(glname)
     ra=gn[1]; dec=gn[2]
     radec=data.frame(ra=ra, dec=dec)
     rdcn=colnames(radec)
   }
-  
-  if("run" %in% rdcn == FALSE || "camcol" %in% rdcn == FALSE || "field" %in% rdcn == FALSE){
-    
+  if("run" %in% rdcn==F || "camcol" %in% rdcn==F || "field" %in% rdcn==F){
     if(ncol(radec) < 2){
       stop('Error: Must provide ra and dec')
     }
@@ -728,10 +738,8 @@ rgbimage=function(radec, size=120, R='i', G='r', B='g', DR=12){
       ra=hms2deg(as.character((radec$ra)))
       radec$ra=ra; radec$dec=dec
     }
-    
     # Extracting run, camcol and field info
     ra=radec$ra; dec=radec$dec
-    
     basdir1.1='http://cas.sdss.org/'
     basdirdr=switch(DR, '12'='dr12', '13'='dr13', '14'='dr14')
     basdir1.2='/en/tools/search/x_results.aspx?searchtool='
@@ -740,11 +748,9 @@ rgbimage=function(radec, size=120, R='i', G='r', B='g', DR=12){
     basdir4='=optical&coordtype=equatorial&ra='
     basdir5='&min_u=0&max_u=20&min_g=0&max_g=20&min_r=0&max_r=20&min_i=0&max_i=20&min_z=0&max_z=20&'
     basdir6='min_j=0&max_j=20&min_h=0&max_h=20&min_k=0&max_k=20&format=html&TableName=&limit=1'
-      
     cat(paste0("Extracting RUN CAMCOL FIELD info from DR",DR,", please wait..."),"\n")
     dir=paste0(basdir1.1, basdirdr, basdir1.2, basdir2, basdir3, basdir4, sprintf("%.5f", ra), 
                  '&dec=', sprintf("%.5f", dec), '&radius=0.1',basdir5,basdir6)
-      
     options(warn=-1)
     p=NULL; attempt=1
     while( is.null(p) && attempt <= 5 ) {
@@ -752,16 +758,12 @@ rgbimage=function(radec, size=120, R='i', G='r', B='g', DR=12){
       tryCatch(try(p <- readLines(dir)), error = function(e) {})
     }
     options(warn=0)
-    
     lgr=function(str, p){ l=length(grep(str, p)); return(l) }
     if (lgr('No objects',p) != 0 || lgr('fix errors',p) != 0 
         || lgr('No entries',p) != 0 || lgr('between 0',p) != 0){
       run=camcol=field=sdss=NA
-      
      } else {
-        
         g2=grep('BGCOLOR=#', p)
-        
         us2=unlist(strsplit(p[g2], 'id='))[2]
         us4=unlist(strsplit(us2, '</font>'))
         us4.1=unlist(strsplit(us4[1], '>'))[1]
@@ -769,21 +771,16 @@ rgbimage=function(radec, size=120, R='i', G='r', B='g', DR=12){
         us5=strsplit(us4, '>')
         us6=unlist(lapply(us5, function(x) x[4]))
         us7=as.double(us6)[1:6]
-        
         run=us7[1]
         camcol=us7[3]
         field=us7[4]
         sdss=us4.1
       }
-      
       setTxtProgressBar(txtProgressBar(0,nr,0,'=',style=3), j)
-      
       radec=data.frame(radec, run=run, camcol=camcol, field=field, sdssid=sdss)
       cat("\n")
-        
       end.time=Sys.time()
       time.taken=round(as.numeric(end.time-start.time), 3)
-        
       wna=which(is.na(run))
       if(length(wna)==nr){stop('No object found in DR12 Data Base')}
       l=length(wna)
@@ -793,26 +790,19 @@ rgbimage=function(radec, size=120, R='i', G='r', B='g', DR=12){
       } else {
         cat("Done, All info found!  ", time.taken, attr(unclass(end.time-start.time),'units'), "\n")
       }
-      
-      
-    
   } 
-  
   radec=data.frame(id=1:nr, radec)
-  
   Link_list=c()
   basedir='https://dr12.sdss.org/sas/dr12/boss/photoObj/frames/301/'
   #ft=c('u','r','z')
   ft=c(B, G, R)
   for(i in 1:3){
-    
     link_DR12=paste0(basedir,as.character(run),'/',as.character(camcol),
-                     '/frame-',ft[i],'-',sprintf("%06.f", run),'-',as.character(camcol),'-',
-                     sprintf("%04.f", field),'.fits.bz2')
-    
+                     '/frame-',ft[i],'-',sprintf("%06.f", run),'-',
+                     as.character(camcol),'-',sprintf("%04.f", field),
+                     '.fits.bz2')
     Link_list[i]=link_DR12
   }
-  
   # baixando as imagens
   dnames=vector(length = 3)
   start.time=Sys.time()
@@ -877,7 +867,6 @@ rgbimage=function(radec, size=120, R='i', G='r', B='g', DR=12){
   y = seq(0.5, dim(R)[2] - 0.5)
   magimageRGB(x, y, R, G, B)
   title('RGB Composite Image')
-  
 }
 
 # funcao para fazer short links em tinyurl.com
@@ -1298,9 +1287,9 @@ varbin=function(x, y, plot=T, labs=c('x','y'), col=1){
 }
 
 # Function to convert arcsec to kpc
-asec2kpc=function(asec, z, Om=0.27, Ol=1-Om, H0=71){
+asec2kpc=function(asec, z, Om=0.27, H0=70){
   require(cosmoFns)
-  da=D.A(z, Om, Ol, H0)
+  da=D.A(z, Om, 1-Om, H0)
   da2arcsec=asec*da/(180*3600/pi/1000)
   return(da2arcsec)
 }
@@ -1389,7 +1378,8 @@ nldens=function(ra, dec, zref, n=5, plot=T){
   return(s)
 }
 
-# function to obtain local galaxy density for flat universe via Voronoi tesselation
+# Get local galaxy density for flat universe via Voronoi tesselation
+# for a volume complete sample
 tessdens=function(ra, dec, z, rlim=3, vlim=1e3, nmax=20, Om=0.3, Ol=1-Om, H0=73, 
                   plot=T){
   require(cosmoFns)
@@ -1430,7 +1420,40 @@ tessdens=function(ra, dec, z, rlim=3, vlim=1e3, nmax=20, Om=0.3, Ol=1-Om, H0=73,
   return(den)
 }
 
-# function to convert SDSS designation JHHMMSS.ss+DDMMSS.s to ra & dec in degrees
+# Get local galaxy density for flat universe via Voronoi tesselation
+# for a mass limited sample
+tessdens=function(ra, dec, z, mass, masslim=9.5, vlim=1e3, nmax=20, Om=0.3, 
+                  H0=70){
+  # mass: logarithm of stellar mass
+  # masslim: minimum limit of mass to consider for the NN search
+  # vlim: maximum limit in velocity to consider for the NN search
+  # nmax: number of nearest neighbours to consider
+  n=length(ra)
+  v=3e5*z 
+  da=D.A(z, Om, 1-Om, H0)
+  den=np=vector(length = n)
+  pb=txtProgressBar(0,n,0,'=',style=3)
+  for(i in 1:n){
+    s=abs(v-v[i])<=1000 & (mass>=masslim | mass==mass[i])
+    s[is.na(s)]=FALSE
+    if(sum(s)<2) {den[i]=-Inf; next;}
+    ras=ra[s]
+    decs=dec[s]
+    k=min(nmax+1, sum(s))
+    nn=nn2(cbind(ras,decs), cbind(ra[i],dec[i]), k=k)
+    idx=nn$nn.idx
+    vor=deldir(ras[idx], decs[idx])
+    sm=vor$summary
+    a=sm$dir.area[1]
+    np[i]=sm$nbpt[1]
+    den[i]=log10(1/(a*da[i]^2))
+    setTxtProgressBar(pb, i)
+  }
+  close(pb)
+  return(data.frame(logden=den, nbpt=np))
+}
+
+# function to convert SDSS designation JHHMMSS.ss+DDMMSS.s to RA & DEc in deg
 sdssid2radec=function(id){
   require(celestial)
   id=as.character(id)
@@ -1481,15 +1504,16 @@ turnpts=function(x, n=512, plot=T, ...){
 }
 
 # Function to find green valley region by fitting 2 gaussians with mclust
-valley=function(x, y, n=10, delta.y=0.5, method = 'content', plot=T){
+valley=function(x, y, n=10, method='content', delta.y=0.5, plot=T){
   require(OneR)
   require(mclust)
-  xb=bin(x, n, labels = 1:n, method = method)
-  sp=split(data.frame(x=x,y=y), xb)
+  df=na.omit(data.frame(x=x,y=y))
+  xb=bin(df$x, n, labels = 1:n, method = method)
+  sp=split(df, xb)
   xc=unlist(lapply(sp, function(d) (max(d$x)+min(d$x))/2))
   yv=m.min=m.max=vector(length = n)
   for(i in 1:n){
-    dens=densityMclust(sp[[i]]$y, G=2, verbose=FALSE)
+    dens=densityMclust(sp[[i]]$y, G=2, verbose=FALSE, plot=F)
     pars=dens$parameters
     #var=pars$variance$scale
     sd=cbind(sp[[i]], dens=dens$density)
@@ -1505,12 +1529,12 @@ valley=function(x, y, n=10, delta.y=0.5, method = 'content', plot=T){
   # l=list(model=coefs)
   if(plot){
     a=coefs[1]; b=coefs[2]
-    plot(x, y, pch=20, cex=.7); abline(lr, col=2, lwd=1)
+    plot(x, y, pch=20, cex=.7); abline(lr, col=2, lwd=1.5)
     points(xc, yv, pch=20, col=6, cex=1)
     ey=unlist(lapply(sp, function(d) plotrix::std.error(d$y)))
     arrows(xc, yv-ey, xc, yv+ey, 0.05, 90, 3, 6)
-    abline(a+delta.y, b, col=2, lty=2, lwd=1)
-    abline(a-delta.y, b, col=2, lty=2, lwd=1)
+    abline(a+delta.y, b, col=2, lty=2, lwd=1.5)
+    abline(a-delta.y, b, col=2, lty=2, lwd=1.5)
   }
   data=data.frame(x=xc, y=yv, mean1=m.max, mean2=m.min)
   return(list(regression=lr, data=data))
@@ -1729,7 +1753,7 @@ ghs=function(x1, x2, plot=T){
 # Kruskal-Wallis multicomparison test for multiple properties
 kw=function(data, class, probs=0.05, plot=T, ...){
   #print(call)
-  require(pgirmess)
+  #require(pgirmess)
   n=ncol(data)
   k=vector('list', length = n)
   for(i in 1:n){
@@ -1745,8 +1769,9 @@ kw=function(data, class, probs=0.05, plot=T, ...){
     image(x=1:n, y=1:length(rn), t(as.matrix(ku[length(rn):1,-1])), col=c(1,'white'), 
           xlab = '', ylab = 'classes', axes=F, cex.lab=1, asp=1, mgp=c(2,1,0), ...)
     # ylab = 'Kruskal-Wallis intraclass comparison'
-    # magicaxis::magimage(x=1:n, y=1:length(rn), t(as.matrix(ku[length(rn):1,-1])), col=c(1,'white'), 
-    #                     xlab = 'data columns', ylab = 'intraclass comparison', axes=F, magmap = F)
+    # magicaxis::magimage(x=1:n, y=1:length(rn), t(as.matrix(ku[length(rn):1,-1])), 
+    #                     col=c(1,'white'), xlab = 'data columns', 
+    #                     ylab = 'intraclass comparison', axes=F, magmap = F)
     #axis(1, at=1:n, labels = cn, cex.axis=.8)
     
     #axis(1, at=1:n, labels = 1:n, mgp=c(2,.5,0), cex.axis=.8)
@@ -1759,7 +1784,8 @@ kw=function(data, class, probs=0.05, plot=T, ...){
     box()
     #title('Kruskal-Wallis multicomparison result')
     # mtext('White cell = TRUE', adj = 0, cex=.7)
-    #mtext(paste('TRUE fraction =',round(length(which(ku[,-1]==T))/prod(dim(ku[,-1])), 3)), adj = 1)
+    #mtext(paste('TRUE fraction =',round(length(which(ku[,-1]==T))/prod(dim(ku[,-1])), 3)), 
+    #      adj=1)
     par(op)
   }
   return(ku)
@@ -1797,7 +1823,7 @@ medist=function(data, class, plot=T){
 
 # multiple comparison using median and quantile error of the median
 mc=function(data, class, plot=T){
-  qf=function(x) return(0.7415*(quantile(x,.75, na.rm=T)-quantile(x,.25, na.rm=T)))
+  qf=function(x) 0.7415*diff(quantile(x, c(.25,.75), na.rm = T))
   sp=split(data, class)
   l=length(sp)
   med=lapply(sp, function(x) apply(x, 2, median, na.rm=T))
@@ -1832,21 +1858,21 @@ mc=function(data, class, plot=T){
   t2=t(err); colnames(t2)=paste0('error.',colnames(t2))
   m=as.matrix(t(m)); colnames(m)=paste0('comp.',rn)
   tme=data.frame(t1, t2)
-  st=data.frame(matrix(paste(t1, t2, sep='Â±'), nrow(t1), ncol(t1)))
+  st=data.frame(matrix(paste(t1, t2, sep='±'), nrow(t1), ncol(t1)))
   dimnames(st)=list(rownames(t1), rownames(med))
   return(list(values=tme, intraclass_comparison=m, string=st))
 }
 
 kwdm=function(data, class, probs=0.05, names=NULL, plot=T, sortnames=T, ...){
   #depend on kw(), medist(), mc() and ghs() functions
-  require(pgirmess)
+  #require(pgirmess)
   require(plotrix)
   if(is.null(names)) names=colnames(data)
   k=kw(data, class, probs, plot=F)
   m=medist(data, class, plot=F)
   me=mc(data, class, plot=F)
   #cn=colnames(data)
-  rn=gsub('-','Ã—',k$comp)
+  rn=gsub('-','×',k$comp)
   n=ncol(data); l=length(rn)
   tk=t(as.matrix(k[l:1,-1]))
   g=expand.grid(1:n,1:l)
@@ -1863,11 +1889,48 @@ kwdm=function(data, class, probs=0.05, names=NULL, plot=T, sortnames=T, ...){
     segments(0.5,(0:l)+0.5,n+0.5,(0:l)+0.5, lwd=1)
     #points(g[,1:2], pch=1, cex=g[,3]*144/(n*l))
     clr=c('gray','white')
-    dc=apply(g, 1, function(x) draw.circle(x[1], x[2], .45*x[3], border=1, col=clr[x[4]]))
+    dc=apply(g, 1, function(x) draw.circle(x[1],x[2],.45*x[3], bord=1, col=clr[x[4]]))
     par(op)
   }
   lout=list(KW=k, relative_distances=m)
   return(invisible(c(lout,me)))
+}
+
+# pairwise multiple comparison of density plots for a vector
+pmplot=function(x, class){
+  require(perm)
+  ucl=sort(unique(class))
+  cb=combn(ucl, 2)
+  nc=ncol(cb)
+  rc=n2mfrow(nc)
+  op=par(mfrow=rc, mai=c(0.4,0.2,0.2,0.2))
+  for(i in 1:nc){
+    cp=cb[,i]
+    x1=x[class==cp[1]]
+    x2=x[class==cp[2]]
+    pval=permTS(c(na.omit(x1)), c(na.omit(x2)))$p.value
+    d1=density(x1, na.rm=T)
+    d2=density(x2, na.rm=T)
+    #xrg=range(c(x1, x2), na.rm=T)
+    xrg=range(c(d1$x, d2$x))
+    yrg=range(c(d1$y, d2$y))
+    clrs=match(cp, ucl)
+    plot(d1, col=clrs[1]+1, main='', xlim=xrg, ylab='',lwd=2, 
+         xlab='', ylim=yrg, axes=F, frame.plot=T)
+    axis(1)
+    lines(d2, col=clrs[2]+1, lwd=2)
+    mtext(paste(cp, collapse='-'))
+    legend('topright', legend=cp, text.col=clrs+1, bty='n',
+           y.intersp=.7, lty=1, col=clrs+1,
+           x.intersp=.5, seg.len=1)
+    if(pval<0.001)
+      mtext('pval<0.001', 1, -1.5, cex=.7, font=2)
+    else if(pval<0.05)
+      mtext(paste0('pval=',round(pval,3)), 1, -1.5, cex=.7, font=2)
+    else
+      mtext(paste0('pval=',round(pval,3)), 1, -1.5, cex=.7)
+  }
+  par(op)
 }
 
 plot.kw=function(x, rows='all', sortnames=F){
@@ -1877,9 +1940,15 @@ plot.kw=function(x, rows='all', sortnames=F){
   if(is.numeric(rows)){
     k=k[rows,]
     m=m[rows,]
-    me[[2]]=me[[2]][,rows]
+    me[[2]]=me[[2]][,paste0('comp.',k$comp)]
   }
-  rn=gsub('-','Ã—',k$comp)
+  if(is.character(rows)){
+    idx=which(k$comp %in% rows)
+    k=k[idx,]
+    m=m[idx,]
+    me[[2]]=me[[2]][,paste0('comp.',rows)]
+  }
+  rn=gsub('-','×',k$comp)
   n=ncol(k)-1 
   l=length(rn)
   tk=t(as.matrix(k[l:1,-1]))
@@ -1896,9 +1965,47 @@ plot.kw=function(x, rows='all', sortnames=F){
   segments((0:n)+0.5,0.5,(0:n)+0.5,l+0.5, lwd=1)
   segments(0.5,(0:l)+0.5,n+0.5,(0:l)+0.5, lwd=1)
   clr=c('gray','white')
-  dc=apply(g, 1, function(x) draw.circle(x[1], x[2], .45*x[3], border=1, col=clr[x[4]]))
+  dc=apply(g, 1, function(x) draw.circle(x[1],x[2],.45*x[3], bord=1, col=clr[x[4]]))
   par(op)
   return(invisible(k))
+}
+
+# plot kwdm fun output as a graph (for one column!)
+kw2graph=function(data, plot=F, ...){
+  require(igraph)
+  comp=data$comp
+  strcomp=strsplit(comp, '-')
+  all.cl=as.integer(unique(do.call(c,strcomp)))
+  x=unlist(data[,2], use.names = F)
+  s=strcomp[!x]
+  if(length(s)>0){
+    df=as.data.frame(do.call(rbind,s))
+    g=graph_from_data_frame(df, directed=F)
+    dif=setdiff(all.cl, as.integer(unique(c(as.matrix(df)))))
+    if(length(dif)>0) g=add_vertices(g, length(dif), name=dif)
+  }else{
+    g=make_empty_graph()
+    g=add_vertices(g, length(all.cl), name=all.cl)
+  }
+  if(plot) plot(g, ...)
+  return(g)
+}
+
+# Get obs.dif-critical.dif in the KW test
+dkw=function(data, class, probs=0.05){
+  #require(pgirmess)
+  n=ncol(data)
+  cn=colnames(data)
+  k=vector('list', length = n)
+  names(k)=cn
+  for(i in 1:n){
+    k[[i]]=kruskalmc(unlist(data[,..i])~class, probs=probs)$dif.com
+  }
+  dkw=sapply(k, function(x) x$obs.dif-x$critical.dif)
+  rn=gsub('-','×',rownames(k[[1]]))
+  dkw=as.data.frame(dkw, row.names=rn)
+  colnames(dkw)=cn
+  return(dkw)
 }
 
 # permutation test for multiple variables (and two classes)
@@ -1926,6 +2033,7 @@ perm=function(data, class, test=c('permTS','ks','t','wilcox')){
       p[i]=wilcox.test(v1[!is.na(v1)], v2[!is.na(v2)])$p.value
     setTxtProgressBar(pb, i)
   }
+  close(pb)
   d=data.frame(p.value=round(p, 4), signif=p<=0.05)
   rownames(d)=colnames(data)
   return(d)
@@ -1948,7 +2056,7 @@ multperm=function(data, class, plot=T){
   tm1=ptm1[,cb:1]
   tm2=ptm2[,cb:1]
   comp=gsub(' = 0', '', PT$Comparison)
-  comp=gsub(' - ', 'Ã—', comp)
+  comp=gsub(' - ', '×', comp)
   if(plot){
     op=par(mai=c(1.2,1.2,.1,.1))
     image(1:nc, 1:cb, tm2, col=c('gray95','white'), xlab='', ylab='', axes=F, asp=1)
@@ -2008,26 +2116,31 @@ biwScale=function(x){
   return(SBI)
 }
 
-# VDP using Bergond et al. (2006) prescription
-vdp=function(dproj, vlos, Nb=1000, N=100, norm=F, plot=T, smooth=T, parallel='no', ...){
+# Velocity dispersion profile using Bergond et al. (2006) prescription
+vdp=function(rpnorm, vpnorm, Nb=1000, N=100, plot=T, add=F, smooth=T, 
+             parallel='no',...){
   # require functions biwLoc & biwScale
-  # vlos must be the LOS velocity NORMALIZED to vdisp
+  # rpnorm is the projected distance normalized to cluster R200
+  # vpnorm is the l.o.s velocity normalized to cluster vel. dispersion
+  # Nb is the number of bootstrap replications
+  # N is the number of points along the projected radius to plot
+  # smooth: do smooth profile?
   require(astro)
   require(boot)
   require(ks)
-  ng=length(dproj)
-  vlos=vlos[order(dproj)]; dproj=sort(dproj)
-  r=seq(0, max(dproj), length.out = N)
-  #r=seq(min(dproj), max(dproj), length.out = N)
-  #hw=biwScale(dproj)
-  hw=2*hns(dproj, 2)
-  vmean=biwLoc(vlos)
-  sigma_v=(vlos-vmean)^2
+  ng=length(rpnorm)
+  vpnorm=vpnorm[order(rpnorm)]; rpnorm=sort(rpnorm)
+  r=seq(0, max(rpnorm), length.out = N)
+  #r=seq(min(rpnorm), max(rpnorm), length.out = N)
+  #hw=biwScale(rpnorm)
+  hw=2*hns(rpnorm, 2)
+  vmean=biwLoc(vpnorm)
+  sigma_v=(vpnorm-vmean)^2
   bf=function(x, idx, w.) sqrt(sum(x[idx], na.rm=T)/w.)
   lc=lwr=upr=vector(length = N)
   pb=txtProgressBar(0, N, style=3)
   for(i in 1:N){
-    wi=(1/hw)*exp(-(r[i]-dproj)^2/(2*hw^2))
+    wi=(1/hw)*exp(-(r[i]-rpnorm)^2/(2*hw^2))
     swi=sum(wi)
     w_sigma_v=wi*sigma_v
     b=boot(w_sigma_v, bf, R=Nb, w.=swi, parallel = parallel)
@@ -2043,9 +2156,12 @@ vdp=function(dproj, vlos, Nb=1000, N=100, norm=F, plot=T, smooth=T, parallel='no
     lc=smooth.spline(r, lc)$y
   }
   if(plot){
-    aplot(c(min(r), max(r)), c(min(lwr), max(upr)), pch='', xlab = expression(R/R[200]), las=1, 
-          ylab = expression(sigma[p]/sigma[R[200]]), main='Velocity Dispersion Profile',...)
-    polygon(c(r, rev(r)), c(lwr, rev(upr)), col='#0000001A', border = NA)
+    if(!add){
+      plot(c(min(r), max(r)), c(min(lwr), max(upr)), pch='', las=1, 
+           xlab = expression(R/R[200]), ylab = expression(sigma[p]/sigma[R[200]]), 
+           main='',...)
+    }
+    polygon(c(r, rev(r)), c(lwr, rev(upr)), col='#0000001A', border=NA)
     lines(r, lc, col=1)
   }
   df=data.frame(r_norm=r, s_r=lc, lwr=lwr, upr=upr)
@@ -2092,8 +2208,8 @@ vdp_=function(dproj, vlos, Nb=1000, N=100, norm=F, plot=T){
   upr=smooth.spline(r, upr)$y
   ss=smooth.spline(r, s)$y
   if(plot){
-    aplot(c(min(r), max(r)), c(min(lwr), max(upr)), pch='', xlab = expression(R/R[200]), las=1, 
-          ylab = expression(sigma[p]/sigma[R[200]]), main='Velocity Dispersion Profile')
+    aplot(c(min(r),max(r)),c(min(lwr),max(upr)),pch='',xlab=expression(R/R[200]), las=1, 
+          ylab=expression(sigma[p]/sigma[R[200]]), main='Velocity Dispersion Profile')
     polygon(c(r, rev(r)), c(lwr, rev(upr)), col='gray90', border = 'gray90')
     lines(r, ss, col=1)
   }
@@ -2137,7 +2253,7 @@ vdp__=function(dproj, vlos, N=100, sigma=0.15, Nb=1000, plot=T){
   upr=smooth.spline(r, upr)$y
   rp=r #rp=r/r200
   if(plot){
-    aplot(c(min(rp), max(rp)), c(min(lwr), max(upr)), pch='', xlab = expression(Radius/R[200]), 
+    aplot(c(min(rp), max(rp)), c(min(lwr), max(upr)), pch='', xlab=expression(Radius/R[200]), 
           ylab = expression(sigma[p]/sigma[r[200]]), main='Velocity Dispersion Profile')
     polygon(c(rp, rev(rp)), c(lwr, rev(upr)), col='gray90', border = 'gray90')
     #points(rp, s, pch=20, type = 'b', cex=0.8, col=1)
@@ -2255,8 +2371,8 @@ kvp=function(dproj, vlos, Nb=1000, N=100, plot=T){
   upr=smooth.spline(r, upr)$y
   ss=smooth.spline(r, s)$y
   if(plot){
-    aplot(c(min(r), max(r)), c(min(lwr), max(upr)), pch='', xlab = expression(R/R[200]), las=1, 
-          ylab = expression(g[u]/g[u[R200]]), main='Velocity Kurtosis Profile')
+    aplot(c(min(r), max(r)), c(min(lwr), max(upr)), pch='', xlab=expression(R/R[200]), 
+          las=1, ylab=expression(g[u]/g[u[R200]]), main='Velocity Kurtosis Profile')
     polygon(c(r, rev(r)), c(lwr, rev(upr)), col='gray90', border = 'gray90')
     lines(r, ss, col=1)
   }
@@ -2347,7 +2463,7 @@ CASNN=function(ra, dec, DR='DR12', tablename='temp', verbose=T){
   return(q)
 }
 
-CASNNloop=function(ra, dec, n=20000, DR='DR12', tablename='temp'){
+CASNNloop=function(ra, dec, DR='DR12', n=20000, tablename='temp'){
   data=data.table(ra,dec)
   nr=nrow(data)
   l=ceiling(nr/n)
@@ -2595,14 +2711,15 @@ binloc=function(x, y, nbin=10, fun='median', method='length', plot=T, ...){
   if(isfact){bin=x}else{bin=bin(x, nbin, labels=1:nbin, method = method)}
   xy=data.table(x=x, y=y)
   qf=function(x) return(0.7415*(quantile(x,.75, na.rm=T)-quantile(x,.25, na.rm=T)))
-  floc=switch(fun, 'median'=function(x) median(x,T), 'mean'=function(x) mean(x,0,T), 'biw'=biwLoc)
+  floc=switch(fun, 'median'=function(x) median(x,T), 'mean'=function(x) mean(x,0,T), 
+              'biw'=biwLoc)
   fsc=switch(fun, 'median'=qf, 'mean'=std.error, 'biw'=biwScale)
   xm=xy[, list(x=floc(x), y=floc(y), yerr=fsc(y)), bin]
   xm=setorder(xm, bin); xm=xm[yerr!=0]
   if(plot){
     plot(x, y, pch=20, cex=.7, col='gray', ...)
     points(xm$x, xm$y, pch=20, col=2, type='b')
-    arrows(xm$x, xm$y-xm$yerr, xm$x, xm$y+xm$yerr, length=.03, code=3, col=2, angle=90)
+    arrows(xm$x, xm$y-xm$yerr, xm$x, xm$y+xm$yerr, len=.03, code=3, col=2, ang=90)
   }
   return(xm)
 }
@@ -2702,7 +2819,8 @@ kpc2deg=function(d_kpc, z){
 
 # getting membership for several PPS regions
 pps.gal=function(rproj, absu, type=1, plot=T, ...){
-  # type: 1 (Mahajan); 2 (Rhee); 3 (Pasquali); 4 (Oman & Hudson); 5 (< R200)
+  # type: 1 (Mahajan); 2 (Rhee); 3 (Rhee 2); 3 (Pasquali); 
+  #       4 (Oman & Hudson); 5 (< R200)
   if(type==1){
     res=numeric(length(rproj))
     res[absu >= 1 & absu <= 2 & rproj >= 1.5 & rproj <= 2]=3
@@ -2712,12 +2830,18 @@ pps.gal=function(rproj, absu, type=1, plot=T, ...){
   }
   if(type==2){
     require(sp)
-    x1=c(1.966,1.977,1.926,1.802,1.722,1.651,1.572,1.503,1.455,1.432,1.425,1.34,1.34,10,10,1.966)
-    y1=c(0,0.148,0.293,0.446,0.6,0.694,0.911,1.064,1.202,1.344,1.503,1.758,3.5,3.5,-0.1,-0.1)
-    x2=c(0,0,0.092,0.156,0.202,0.248,0.333,0.448,0.6,0.747,0.802,0.851,0.871,0.857,0.857,0)
-    y2=c(3.5,2,1.8,1.67,1.526,1.38,1.214,1.048,0.952,1.06,1.214,1.457,1.653,2.161,10,10)
-    x3=c(0.454,0.431,0.4,0.344,0.37,0.451,0.756,1.053,1.2,1.303,1.354,1.38,1.4,1.372,0.454)
-    y3=c(0,0.16,0.348,0.533,0.6,0.673,0.633,0.651,0.574,0.444,0.362,0.3,0.143,-0.1,-0.1)
+    x1=c(1.966,1.977,1.926,1.802,1.722,1.651,1.572,1.503,1.455,1.432,1.425,
+         1.34,1.34,10,10,1.966)
+    y1=c(0,0.148,0.293,0.446,0.6,0.694,0.911,1.064,1.202,1.344,1.503,1.758,
+         3.5,3.5,-0.1,-0.1)
+    x2=c(0,0,0.092,0.156,0.202,0.248,0.333,0.448,0.6,0.747,0.802,0.851,0.871,
+         0.857,0.857,0)
+    y2=c(3.5,2,1.8,1.67,1.526,1.38,1.214,1.048,0.952,1.06,1.214,1.457,1.653,
+         2.161,10,10)
+    x3=c(0.454,0.431,0.4,0.344,0.37,0.451,0.756,1.053,1.2,1.303,1.354,1.38,
+         1.4,1.372,0.454)
+    y3=c(0,0.16,0.348,0.533,0.6,0.673,0.633,0.651,0.574,0.444,0.362,0.3,0.143,
+         -0.1,-0.1)
     x4=c(0,0.154,0.182,0.251,0.269,0.287,0.4,0.453,0,0)
     y4=c(1.837,1.536,1.365,1.056,0.921,0.755,0.332,-0.1,-0.1,1.837)
     p1=point.in.polygon(rproj, absu, x1, y1)*4
@@ -2728,6 +2852,25 @@ pps.gal=function(rproj, absu, type=1, plot=T, ...){
     col=c(1,'#DE1F1A','#FFBF06','#28BF11','#5649E3')
   }
   if(type==3){
+    x1=c(3,3,.381,.624,.876,1.127,1.378,1.5)
+    y1=c(0,1,2.5,1.5,1.5,.5,.5,0)
+    x2=c(.381,0,0,.115,.624)
+    y2=c(2.5,2.5,1.95,1.5,1.5)
+    x3=c(1.127,.876,.115,.372)
+    y3=c(.5,1.5,1.5,.5)
+    x4=c(1.5,1.378,.372,.5)
+    y4=c(0,.5,.5,0)
+    x5=c(.5,0,0)
+    y5=c(0,1.95,0)
+    p1=point.in.polygon(rproj, absu, x1, y1)*5
+    p2=point.in.polygon(rproj, absu, x2, y2)*4
+    p3=point.in.polygon(rproj, absu, x3, y3)*3
+    p4=point.in.polygon(rproj, absu, x4, y4)*2
+    p5=point.in.polygon(rproj, absu, x5, y5)
+    res=p1+p2+p3+p4+p5
+    col=c(1,'#F94144','#F8961E','#F9C74F','#90BE6D','#577590')
+  }
+  if(type==4){
     a=c(0.011, 1.916, 3.061, 3.578, 3.599, 3.256, 2.681, 2.006)
     b=c(-4.81, -5.752, -6.326, -6.532, -6.37, -5.84, -4.942, -3.676)
     c=c(1.455, 2.38, 3.089, 3.582, 3.859, 3.92, 3.765, 3.394)
@@ -2737,13 +2880,14 @@ pps.gal=function(rproj, absu, type=1, plot=T, ...){
            absu > a[i-1]*rproj^2+b[i-1]*rproj+c[i-1])*i
       res=res+w
     }
-    col=c(1,'#D12500','#DB6A03','#B2FB2E','#13AD00','#9CCADE','#065B95','#1D1F85','#600F52')
+    col=c(1,'#D12500','#DB6A03','#B2FB2E','#13AD00','#9CCADE',
+          '#065B95','#1D1F85','#600F52')
   }
-  if(type==4){
+  if(type==5){
     res=(absu < -4*sqrt(3)/3/1.1363*rproj+2*sqrt(3))*1
     col=c(1,'#DE1F1A')
   }
-  if(type==5){
+  if(type==6){
     res=(rproj<=1)*1
     col=c(1,'#DE1F1A')
   }
@@ -2757,16 +2901,20 @@ pps.gal=function(rproj, absu, type=1, plot=T, ...){
 }
 
 linesRhee=function(...){
-  #x1=c(1.966,1.977,1.926,1.802,1.722,1.651,1.572,1.503,1.455,1.432,1.425,1.34,1.34,1.34,1.34,1.34,1.34)
-  #y1=c(0,0.148,0.293,0.446,0.6,0.694,0.911,1.064,1.202,1.344,1.503,1.758,2,2.5,2.7,2.9,3)
+  #x1=c(1.966,1.977,1.926,1.802,1.722,1.651,1.572,1.503,1.455,1.432,1.425,1.34,
+  #1.34,1.34,1.34,1.34,1.34)
+  #y1=c(0,0.148,0.293,0.446,0.6,0.694,0.911,1.064,1.202,1.344,1.503,1.758,2,2.5,
+  #2.7,2.9,3)
   x2=c(0,0.092,0.156,0.202,0.248,0.333,0.448,0.6,0.747,0.802,0.851,0.871,0.871,0.871)
   y2=c(2,1.8,1.67,1.526,1.38,1.214,1.048,0.952,1.06,1.214,1.457,1.653,2.161,3)
   x3=c(0.14,0.239,0.3,0.37,0.451,0.756,1.053,1.2,1.303,1.354,1.379,1.4,1.372)
   y3=c(0,0.293,0.411,0.6,0.673,0.633,0.651,0.574,0.444,0.362,0.3,0.143,0)
   #x4=c(0,0.154,0.182,0.251,0.269,0.287,0.4,0.453)
   #y4=c(1.837,1.536,1.365,1.056,0.921,0.755,0.332,0)
-  x1=c(1.34,1.34, 1.425, 1.432, 1.455, 1.503, 1.572, 1.651, 1.722, 1.802, 1.926, 1.966, 1.977,2.02)
-  y1=c(3,2.563, 1.622, 1.614, 1.397, 1.199, 0.951, 0.758, 0.605, 0.442, 0.194, 0.113, 0.091,0)
+  x1=c(1.34,1.34, 1.425, 1.432, 1.455, 1.503, 1.572, 1.651, 1.722, 1.802, 1.926, 
+       1.966, 1.977,2.02)
+  y1=c(3,2.563, 1.622, 1.614, 1.397, 1.199, 0.951, 0.758, 0.605, 0.442, 0.194, 
+       0.113, 0.091,0)
   x4=c(0, 0.154, 0.182, 0.251, 0.269, 0.287, 0.4, 0.453,0.46)
   y4=c(1.935, 1.373, 1.271, 0.998, 0.912, 0.833, 0.282, 0.024,0)
   #s1=supsmu(x1, y1)
@@ -2793,7 +2941,7 @@ drawppslines=function(){
   lines(c(1.5,1.5,2,2,1.5), c(1,2,2,1,1), col=4)
   linesRhee(col=3)
   linesPasquali(col='purple')
-  mtext('JaffÃ©', 3, -2, adj=.95, col=2)
+  mtext('Jaffé', 3, -2, adj=.95, col=2)
   mtext('Mahajan', 3, -2.8, adj=.95, col=4)
   mtext('Rhee', 3, -3.6, adj=.95, col=3)
   mtext('Pasquali', 3, -4.4, adj=.95, col='purple')
@@ -2815,6 +2963,7 @@ ds.test=function(ra, dec, z, zcen=NA, Nboot=1000, plot=T){
   k=(Nnn+1)/sig^2
   nn=nn2(cbind(ra,dec), k=Nnn+1)$nn.idx
   di2=matrix(NA, N, Nboot+1)
+  vd=vector(len=N)
   pb=txtProgressBar(0, Nboot, style=3)
   for(j in 1:(Nboot+1)){
     vis=sample(vi, N, T)
@@ -2823,67 +2972,39 @@ ds.test=function(ra, dec, z, zcen=NA, Nboot=1000, plot=T){
       vinn=vis[nn[i,]]
       vloc=biwLoc(vinn)
       sigloc=biwScale(vinn)
-      di2[i,j]=k*((vloc-v)^2+(sigloc-sig)^2)
+      vdif=vloc-v
+      if(j==1) vd[i]=vdif
+      di2[i,j]=k*(vdif^2+(sigloc-sig)^2)
     }
     setTxtProgressBar(pb, j)
   }
   close(pb)
   di=sqrt(di2)
-  Ddev=apply(di, 2, sum)/N
+  Ddev=apply(di, 2, sum)
   prob=sum(Ddev[-1]<Ddev[1])/Nboot
   if(plot){
     op=par(mfrow=c(2,2), mai=c(0.65,0.65,0.2,0.2))
-    zz=(di[,1]-min(di[,1]))/max(di[,1]-min(di[,1]))/20
-    #zz=exp(di[,1]/2)/200
-    plot(ra, dec, pch=20, cex=.5, asp=1, xlab='RA', ylab='Dec')
-    circle.fun=function(x) draw.circle(x[1],x[2],x[3])
-    ap=apply(data.frame(ra,dec,zz), 1, circle.fun)
-    hist(Ddev[-1], 'fd', border='white', main='DS bootstrap distr.', col='gray',
-         xlab='DS statistic', xlim=c(min(Ddev),max(Ddev[1],max(Ddev))))
+    zz=di[,1]/max(abs(di[,1]))
+    pal=hsv(seq(2/3, 0, len=200))
+    vrg=range(vd)
+    ccv=pal[((vd-vrg[1])/(vrg[2]-vrg[1])*(length(pal)-1))+1]
+    ccv=adjustcolor(ccv, alp=.5)
+    plot(ra, dec, pch=20, asp=1, xlab='RA', ylab='Dec', cex=exp(zz), col=ccv)
+    mtext('Projected positions', cex=.8)
+    mtext(expression(paste('color-coded ',v[loc]-v[glob],' and size~',
+                           exp(delta[i]))), line=-1.2, cex=.8)
+    xl=c(min(Ddev),max(Ddev[1],max(Ddev)))
+    hist(Ddev[-1], 'fd', border='white', col='gray', main='', xlim=xl,
+         xlab=expression(paste(Delta,' statistic')))
+    mtext(expression(paste(Delta,' bootstrap distribution')), cex=.8)
     abline(v=median(Ddev), col='white', lty=2, lwd=2)
     abline(v=Ddev[1], lty=2, lwd=2)
     par(op)
   }
-  return(c(DS=Ddev[1],Prob=prob))
-}
-
-# DEPRECATED!!
-# Dressler-Shectman test for detecting substructures in galaxy clusters
-ds.test=function(ra, dec, z, zclus=NULL, N=10, plot=T){
-  require(RANN)
-  n=length(ra)
-  #if(n<20) N=round(sqrt(n))
-  N=sqrt(n)
-  if(is.null(zclus)) zclus=biwLoc(z)
-  vlos=3e5*(z-zclus)/(1+zclus)
-  scl=biwScale(vlos)
-  vcl=biwLoc(vlos)
-  k=N+1; c=k/scl^2
-  d=vector(length = n)
-  for(i in 1:n){
-    s=abs(vlos-vlos[i])<=1000
-    k=ifelse(sum(s)<k, sum(s), k)
-    nn=nn2(cbind(ra[s],dec[s]), cbind(ra[i],dec[i]), k=k)
-    idx=nn$nn.idx[-1]
-    vls=vlos[s][idx]
-    vgal=biwLoc(vls)
-    sgal=biwScale(vls)
-    if(sgal>scl) next;
-    d[i]=(vgal-vcl)^2+(sgal-scl)^2
-  }
-  di=sqrt(c*d); dst=sum(di); sub=dst/n>1
-  #print(dst)
-  if(plot){
-    require(astro)
-    op=par(mar=c(5.1,4.1,4.1,5.1), oma=c(0,0,0,0))
-    zlim=round(range(di, na.rm=T), 1)
-    aplot(ra, dec, di, pch=20, xlab = 'RA', ylab = 'DEC', cb=T, zlim=zlim, las=1,
-          cbspan = 1, zlab = expression(delta[i]), zline = 3.9)
-    title('Dressler-Shectman test')
-    mtext(bquote(N[nn]==.(N)), adj=0); mtext(paste('substructures:',sub))
-    par(op)
-  }
-  return(list(substructure=sub, di=di, dn=dst/n))
+  DS=Ddev[1]/N
+  dia=ifelse(DS>1 & prob>0.5, T, F)
+  df=data.frame(DS=DS,Prob=prob,substructure=dia)
+  return(list(dev=di[,1],vdiff=vd,values=df))
 }
 
 # hexagonal binning plot
@@ -3086,6 +3207,8 @@ getab=function(x1,x2,y1,y2){
 # get a,b coefficients from loc=locator() and draws the line
 getab2=function(loc, draw=T){
   x=loc[[1]]; y=loc[[2]]
+  x=unique(x)
+  y=unique(y)
   b=(y[2]-y[1])/(x[2]-x[1]); a=y[1]-b*x[1]
   ab=c(a,b); names(ab)=c('a','b')
   if(draw) abline(a, b)
@@ -3146,7 +3269,8 @@ GMM=function(data, G=2:9, plot=T){
 }
 
 # plotting GMM object
-plot.GMM=function(x, what=c("BIC", "classification", "uncertainty", "all"), add.ellipses=T){
+plot.GMM=function(x, what=c("BIC", "classification", "uncertainty", "all"), 
+                  add.ellipses=T){
   require(magicaxis)
   require(plotrix)
   require(RColorBrewer)
@@ -3161,7 +3285,8 @@ plot.GMM=function(x, what=c("BIC", "classification", "uncertainty", "all"), add.
       add.ellipses=F
       message("Warning: non-square matrix in 'eigen', add.ellipses set to FALSE")
     }else{
-      ab=do.call(rbind,lapply(ei, function(x) 1.1*sqrt(2)*sqrt(x[[1]]))) #95%<-1.7; 68%<-1.1
+      ab=do.call(rbind,lapply(ei, function(x) 1.1*sqrt(2)*sqrt(x[[1]]))) 
+      #95%<-1.7; 68%<-1.1
       angles=unlist(lapply(ei, function(x) atan2(x[[2]][1,1], x[[2]][1,2])))
     }
   }
@@ -3274,8 +3399,9 @@ kde_2d_weighted=function(x, y, w=NULL, n=100, h=c('factor','scott','silverman'))
   return(list(x=xr, y=yr, z=zim))
 }
 
-# plot lines from linear regression with confidence/prediction intervals as shaded polygon
-lines.lm=function(x, y, interval='confidence', level=.95, n=100, plot.int=T, col.int='#BEBEBE80', 
+# plot lines from linear regression with conf/pred intervals as shaded polygon
+lines.lm=function(x, y, interval='confidence', level=.95, n=100, plot.int=T, 
+                  col.int='#BEBEBE80', 
                   col=1, lwd=1, lty=1, ...){
   md=lm(y~x)
   xr=range(x, na.rm=T)
@@ -3288,6 +3414,7 @@ lines.lm=function(x, y, interval='confidence', level=.95, n=100, plot.int=T, col
     polygon(c(nwx,rev(nwx)), c(lwr,rev(upr)), border=NA, col=col.int)
 }
 
+# Multiple unimodality tests
 test.unimod=function(data){
   require(diptest)
   require(silvermantest)
@@ -3338,10 +3465,12 @@ id3=function(x,y,z){
   return(n)
 }
 
-# rotate bivariate data (matrix, 1st column: x, 2nd column: y) by an angle
+# Rotate 2D matrix data related to origin by an angle
 rotdata=function(data, angle, type='rad'){
   if(type=='deg') angle=angle*pi/180
-  rot=matrix(c(cos(angle),sin(angle),-sin(angle),cos(angle)), 2, 2) %*% t(data)
+  cos.a=cos(angle)
+  sin.a=sin(angle)
+  rot=matrix(c(cos.a,sin.a,-sin.a,cos.a), 2, 2) %*% t(data)
   return(t(rot))
 }
 
@@ -3350,7 +3479,9 @@ rotdatalm=function(x, y, asp=1, plot=T){
   df=data.frame(x=x,y=y)
   reg=lm(y~x, df)
   angle=-coef(reg)[2]
-  rot=t(matrix(c(cos(angle),sin(angle),-sin(angle),cos(angle)), 2, 2) %*% t(as.matrix(df)))
+  cos.a=cos(angle)
+  sin.a=sin(angle)
+  rot=t(matrix(c(cos.a,sin.a,-sin.a,cos.a), 2, 2) %*% t(as.matrix(df)))
   if(plot){
     op=par(mfrow=c(2,2), mai=c(.65,.65,.1,.1))
     plot(x, y, asp=asp)
@@ -3560,14 +3691,14 @@ tpcf=function(x, y, nbin=6, type='DP', method='content', knn=5, full_region=T, p
     # barplot(RR, col=tcol[3], add=T) # blue
     # barplot(DD, col=tcol[2], add=T) # green
     
-    magplot(bins, ACF+1, pch=19, log='xy', xlab="Separation r", ylab=expression(1+xi(r)), las=1,
-            ylim=c(min(ACF+1-Delta_ACF), max(ACF+1+Delta_ACF)))
+    magplot(bins, ACF+1, pch=19, log='xy', xlab="Separation r", ylab=expression(1+xi(r)), 
+            las=1, ylim=c(min(ACF+1-Delta_ACF), max(ACF+1+Delta_ACF)))
     arrows(bins, ACF+1-Delta_ACF, bins, ACF+1+Delta_ACF, length=0.05, angle=90, code=3)
     abline(lmfit_acf_h, col="blue")
     
-    legend('bottomleft', legend=c(sprintf("Exponent = %+3.2f \u00B1 %3.2f", expont, delta_expont), 
-                                sprintf("Intercept = %+3.2f \u00B1 %3.2f", interc, delta_interc), 
-                                sprintf("R\UB2 = %3.2f", r_sqrd)), bty='n', cex=.8)
+    legend('bottomleft', leg=c(sprintf("Exponent = %+3.2f \u00B1 %3.2f", expont, delta_expont), 
+                               sprintf("Intercept = %+3.2f \u00B1 %3.2f", interc, delta_interc), 
+                               sprintf("R\UB2 = %3.2f", r_sqrd)), bty='n', cex=.8)
     # maghist(DR1, 'fd', log='x', col=tcol[1], verbose = F)
     # maghist(RR1, 'fd', log='x', col=tcol[3], add=T, verbose = F)
     # maghist(DD1, 'fd', log='x', col=tcol[2], add=T, verbose = F)
@@ -3914,7 +4045,7 @@ kde2dWeighted=function (x, y, w, h, n, lims = c(range(x), range(y)),proba.min=1E
   return(Matrix2DataFrame(mat=z,x=gx,y=gy))
 }
 
-oner_breaks=function(x, n, method='content'){
+oner_breaks=function(x, n, method='content', verbose=T){
   require(OneR)
   bn=bin(x, n, method = method, labels = 1:n)
   sp=split(x, bn)
@@ -3924,7 +4055,7 @@ oner_breaks=function(x, n, method='content'){
   b=c(min(bks), ib, max(bks))
   names(b)=NULL
   tb=median(table(bn))
-  message('Median content per bin: ',tb)
+  if(verbose) message('Median content per bin: ',tb)
   return(b)
 }
 
@@ -4046,12 +4177,13 @@ iter.lm=function(x, y, type=1, plot=T, ...){
 
 # Aperture multipole moments of 2D coordinates within radii r1 and r2 in Mpc
 # A&A 635, A195 (2020)
-multip.mom=function(ra, dec, ra0, dec0, z0, r1=0, r2=1, m=0:10, N=1e3, 
-                    Om=0.27, Ol=1-Om, H0=72, plot=T){
+multip.mom=function(ra, dec, ra0, dec0, z0, r1=0, r2=1, m=0:10, N=1000, 
+                    Om=0.3, H0=70, plot=T){
   require(cosmoFns)
   require(plotrix)
   require(spatstat.geom)
-  da=D.A(z0, Om, Ol, H0) # Angular diameter distance in Mpc
+  #require(Hmisc)
+  da=D.A(z0, Om, 1-Om, H0) # Angular diameter distance in Mpc
   dz=sin(dec0*pi/180)*sin(dec*pi/180)
   dr=cos(dec0*pi/180)*cos(dec*pi/180)*cos((ra0-ra)*pi/180)
   R=da*acos(dz+dr)
@@ -4064,34 +4196,42 @@ multip.mom=function(ra, dec, ra0, dec0, z0, r1=0, r2=1, m=0:10, N=1e3,
   nm=length(m)
   Qm=matrix(NA, N, nm)
   for(i in 1:N){
-    idx=sample(1:n, n, replace = T) # Resampling
-    for(j in 1:nm) Qm[i,j]=abs(sum(w[idx]*exp(1i*m[j]*phi[idx])))
+    idx=sample(1:n, n, replace=T) # resampling
+    for(j in 1:nm) 
+      Qm[i,j]=abs(sum(w[idx]*exp(1i*m[j]*phi[idx])))
   }
-  qf=function(x) 0.7415*(quantile(x,.75)-quantile(x,.25))
+  #qf=function(x) 0.7415*diff(quantile(x, c(.25,.75), na.rm=T))
+  qf=function(x) abs(diff(Rmisc::CI(x, .95)[-1]))
   loc=apply(Qm, 2, median)
   scl=apply(Qm, 2, qf)
   qm=loc[m>0]
   w=(qm-min(qm))/(max(qm)-min(qm))
-  Pm.med=weighted.median(m[m>1], w[m>1]) # Median angular scale
+  Pm.med=wtd.mean(m[m>1], w[m>1]) # Median angular scale
   Pm.err=0.7415*diff(weighted.quantile(m[m>1], w[m>1], c(.25,.75)))
+  #Pm.err=sqrt(wtd.var(m[m>1], w[m>1]))
+  df=data.frame(m=m, Qm=loc, Qm_err=scl)
+  if(any(m==0)) df$Qm_Q0=loc/loc[m==0]
+  names(Pm.err)=NULL
+  mmax=m[m>1][which.max(loc[m>1])]
+  pm=round(c('max'=mmax, 'median'=Pm.med, 'error'=Pm.err), 3)
   lwr=loc-scl
   upr=loc+scl
   if(plot){
     op=par(mai=c(0.55,0.55,0.1,0.1))
-    layout(matrix(c(1,1,1,1,2,2), 3, 2, T), heights = c(1,1,1))
-    plot(ra, dec, pch=20, cex=.7, xlab='RA', ylab='Dec', asp=1)
+    layout(matrix(c(1,1,1,1,2,2), 3, 2, T), heights=c(1,1,1))
+    plot(ra, dec, pch=1, cex=1, xlab='RA', ylab='Dec', asp=1)
     draw.circle(ra0, dec0, r1/(da*pi/180), border=2)
     draw.circle(ra0, dec0, r2/(da*pi/180), border=2)
     w=which(m>0)
-    plot(m[w], loc[w], type='l', ylim = c(min(lwr[w]), max(upr[w])), xlab='m', ylab='Qm')
-    polygon(c(m[w],rev(m[w])), c(lwr[w],rev(upr[w])), col='#00000033', border = NA)
+    plot(m[w], loc[w], type='l', ylim=c(min(lwr[w]), max(upr[w])), xlab='m', 
+         ylab='Qm', xaxt='n')
+    axis(1, 1:(n-1), 1:(n-1))
+    polygon(c(m[w],rev(m[w])), c(lwr[w],rev(upr[w])), col='#00000033', bor=NA)
+    abline(v=mmax, lty=2, col='gray')
+    abline(v=c(Pm.med-Pm.err,Pm.med,Pm.med+Pm.err), lty=1, col='gray')
     layout(1)
     par(op)
   }
-  df=data.frame(m=m, Qm=loc, Qm_err=scl)
-  if(any(m==0)) df$Qm_Q0=loc/loc[m==0]
-  names(Pm.err)=NULL
-  pm=round(c('max'=m[m>1][which.max(loc[m>1])], 'median'=Pm.med, 'error'=Pm.err), 3)
   return(list('Multipole_moments'=df, 'Angular_scale'=pm))
 }
 
@@ -4370,7 +4510,8 @@ pps=function(ra, dec, z, raclus, declus, zclus, Om=.3, Ol=1-Om, H0=67){
 }
 
 # Get galaxies around (ra,dec,z) coordinates in the SDSS field
-getSDSSgals=function(ra, dec, z, Rmax=6, Vmax=4000, z.type='spec', DR='DR12', Om=0.3, H0=67){
+getSDSSgals=function(ra, dec, z, Rmax=6, Vmax=4000, z.type='spec', DR='DR12', 
+                     Om=0.3, H0=67){
   # require pps function
   # z.type can be 'spec' (spectroscopic z) or 'photo' (photometric z)
   require(SciServer)
@@ -4418,26 +4559,43 @@ getSDSSgals=function(ra, dec, z, Rmax=6, Vmax=4000, z.type='spec', DR='DR12', Om
 }
 
 # Limiting mass completeness calculation following Pozzetti et al. (2010)
-masscomp=function(z, mag, mass, nbin=10, ...){
+# See also Ling et al. (2020)
+masscomp=function(z, mag, mass, nbin=10, comp=95, ...){
+  # z: redshift
+  # mag: APPARENT magnitude
+  # mass: logarithm of stellar mass
+  # comp: desired completeness in percent
+  # nbin: number of bins for redshift
   df=na.omit(data.frame(z, mag, mass))
-  breaks=seq(min(df$z), max(df$z), length.out=nbin)
+  breaks=seq(min(df$z), max(df$z), length.out=nbin+1)
   zc=(breaks[-1]+breaks[-length(breaks)])/2
   ct=cut(df$z, breaks, F)
-  df$ct=ct
-  dft=data.frame(table(ct))
-  df=merge(df, dft, by='ct', sort = F)
-  df$Freq=floor(df$Freq/5)
-  sp=split(df, df$ct)
-  sp=lapply(sp, function(x) x[order(x$mag, decreasing = T),])
-  Mlim=unlist(lapply(sp, function(x) quantile(x[1:x$Freq[1],]$mass, .95)))
+  sp=split(df, ct)
+  sp=lapply(sp, function(x) x[x$mag>17.6 & x$mag<17.77,])
+  # dft=data.frame(table(ct))
+  # df=merge(df, dft, by='ct', sort = F)
+  # df$Freq=floor(df$Freq/5) # 20% of total objects per bin
+  # sp=split(df, df$ct)
+  # sp=lapply(sp, function(x) x[order(x$mag, decreasing=T),])
+  # sp=lapply(sp, function(x) x[1:x$Freq[1],])
+  Mlim=unlist(lapply(sp, function(x) quantile(x$mass, comp/100)))
+  mmag=unlist(lapply(sp, function(x) median(x$mag)))
+  fnt=do.call(rbind,sp)
   model=nls(Mlim~a*zc^2+b*zc+c, start=list(a=1, b=1, c=0))
   p=coef(model)
-  fitline=function(x, a, b, c){a*x^2+b*x+c}
+  fitcurve=function(x, a, b, c){a*x^2+b*x+c}
   # plotting
-  plot(z, mass, pch='.', ...)
+  plot(z, mass, pch='.', xlab='z', ylab='log(M*)', ...)
   points(zc, Mlim, pch=15, col='red')
-  curve(fitline(x, p[1], p[2], p[3]), min(df$z), max(df$z), add=T, col='red')
-  return(model)
+  curve(fitcurve(x, p[1], p[2], p[3]), min(df$z), max(df$z), add=T, col='red')
+  points(fnt[,1], fnt[,3], pch='.', col='blue')
+  legend('bottomright', pch=c(15,20), col=c('red','blue'), 
+         legend=c('Limiting mass in z bins','Mass distr. under Mlim'))
+  cl=ifelse(mass>p[1]*z^2+p[2]*z+p[3], 1, 0)
+  cl[is.na(cl)]=0
+  lout=list(data=data.frame(z=zc,M=Mlim,med_mag=mmag,row.names=1:nbin), 
+            model=model, classification=cl)
+  return(lout)
 }
 
 # Classifies points per squared bin in a 2D histogram
@@ -4466,24 +4624,26 @@ blanton.pred=function(x, n=5, method='length'){
   # require hist2Dclass()
   # x must be a matrix with first column being the variable of reference
   # n: number of bins
-  # one-dimensional case
   require(OneR)
   require(plotrix)
   xnames=colnames(x)
   if(!is.matrix(x)) x=as.matrix(x)
   nc=ncol(x)-1
-  var_Y=var(x[,1])
+  var_Y=var(x[,1], na.rm = T)
+  # one-dimensional case
   f=function(x){sum((x-(sum(x)/length(x)))^2)}
   var_X=numeric(nc)
-  brk=vector('list', length = nc)
+  brk=tb=vector('list', length = nc)
   for(i in 1:nc){
+    #print(i)
     YX=na.omit(x[,c(1,i+1)])
     Y=YX[,1]
     X=YX[,2]
-    bin_class=bin(X, n, 1:n, method = method)
+    bin_class=bin(X, n, 1:n, method=method)
+    tb[[i]]=table(bin_class)
     l=split(Y, bin_class)
     s=unlist(lapply(l, f))
-    var_X[i]=sum(s)/(length(Y)-1)
+    var_X[i]=sum(s, na.rm=T)/(length(Y)-1)
     if(method=='content'){
       lx=split(X, bin_class)
       rg=unlist(lapply(lx, range))
@@ -4497,7 +4657,9 @@ blanton.pred=function(x, n=5, method='length'){
     }
   }
   vdif1=var_X-var_Y
-  d1=data.frame(var_diff=round(vdif1,4), row.names = xnames[-1])
+  d1=data.frame(var_diff=round(vdif1,4), row.names=xnames[-1])
+  tb=t(do.call(rbind,tb))
+  colnames(tb)=xnames[-1]
   # two-dimensional case
   comb=combn(nc, 2)
   n.comb=combn(xnames[-1],2)
@@ -4516,7 +4678,7 @@ blanton.pred=function(x, n=5, method='length'){
     }
     l=split(Y, hc)
     s=unlist(lapply(l, f))
-    var_XX[i]=sum(s)/(length(Y)-1)
+    var_XX[i]=sum(s, na.rm = T)/(length(Y)-1)
     hct=as.numeric(table(hc))
     hce[i]=std.error(hct)
     hcs[[i]]=summary(hct)
@@ -4536,7 +4698,8 @@ blanton.pred=function(x, n=5, method='length'){
   l3=data.frame(do.call(rbind,brk))
   rownames(l3)=xnames[-1]
   l=list(d, 'best ordered single'=l1, 'best ordered pairs'=l2, 
-         '1D & 2D breaks'=l3, '2D binning counts statistics'=hcs)
+         '1D & 2D breaks'=l3, '1D bin counts'=tb,
+         '2D binning counts statistics'=hcs)
   names(l)[[1]]=paste('variables as predictors of',xnames[1])
   return(l)
 }
@@ -4764,4 +4927,290 @@ getSDSSimage=function(objid, filter='r', size=700, usr='', pwd='', plot=T, verbo
   if(plot) magimage(imcut)
   if(save) saveRDS(imcut,paste0(name,'.RDS'))
   return(invisible(imcut))
+}
+
+# Linear model fit with spread and no errors using JAGS
+bayeslm=function(x, y, n.adapt=1e3, n.iter=1e6){
+  # require JAGS to be installed
+  # check that prior for intrinsic scatter match your data!
+  require(rjags)
+  d=na.omit(data.frame(x=x, y=y))
+  # Fit with Spread and No Errors
+  model='model{
+  for (i in 1:length(y)) {
+    y[i] ~ dnorm(z[i], pow(intrscat, -2))
+    z[i] <- a + b*x[i]
+  }
+  intrscat ~ dunif(0, 3)
+  a ~ dnorm(0.0, 1.0E-4)
+  b ~ dt(0, 1, 1)
+  }'
+  message('Creating a JAGS model')
+  jm=jags.model(textConnection(model), list(x=d$x, y=d$y), n.adapt=n.adapt, 
+                n.chains=1) 
+  rm(d)
+  message('Generating posterior samples')
+  cs=coda.samples(jm, c('a','b','intrscat'), n.iter=n.iter)
+  message('Sumarizing and plotting the samples')
+  sm=summary(cs)
+  qn=sm$quantiles
+  q=qn[,'50%']
+  st=sm$statistics
+  mn=st[,'Mean']
+  st=cbind(st[,1:2], qn[,c('25%','50%','75%')])
+  sam=as.matrix(cs)
+  rm(cs)
+  # plotting
+  op=par(mfrow=c(2,2), mai=c(.5,.5,.2,.1))
+  hist(sam[,1], 'fd', main='a', xlab='', ylab='')
+  abline(v=mn[1], col='orange')
+  abline(v=q[1], lty=2, col='red')
+  legend('topright', lty=c(1,2), col=c('orange','red'), bty='n', cex=.8,
+         legend=c('mean','median'))
+  hist(sam[,2], 'fd', main='b', xlab='', ylab='')
+  abline(v=mn[2], col='orange')
+  abline(v=q[2], lty=2, col='red')
+  hist(sam[,3], 'fd', main='intrinsic scatter', xlab='', ylab='')
+  abline(v=mn[3], col='orange')
+  abline(v=q[3], lty=2, col='red')
+  # require(gplots)
+  gplots::textplot(round(st,3), valign='top', cex=.8, cmar=.5)
+  par(op)
+  res=list(samples=sam, summary=sm)
+  return(invisible(res))
+}
+
+# s-plot like histogram
+mcmc_hist=function(x, nbins=30, labels=c(1,1,0,0), freq=T,...){
+  # nbins: integer or a character (as breaks in hist function)
+  # if freq=T (default) uses frequencies, else uses the densities
+  xlim=range(x,na.rm=T)
+  if(is.numeric(nbins))
+    nbins=seq(xlim[1], xlim[2], len=nbins+1)
+  h=hist(x, breaks=nbins, plot=F)
+  b=h$breaks; c=h$counts
+  if(!freq) c=h$density
+  c=rep(c, each=2)
+  c=c(0,c,0)
+  b=rep(b, each=2)
+  df=data.frame(breaks=b, counts=c)
+  magplot(df, type='s', side=1:4, las=1,grid=F, labels=labels,...)
+  abline(h=0, col='gray')
+  return(invisible(df))
+}
+
+# display 2D binned image + contours + points
+mcmc_plot=function(x, y, gridsize=200, showdensmap=T, cont=c(68,95), 
+                   labels=c(1,1,0,0), drawpoints=F,...){
+  # gridsize: squared bins of the density image
+  # cont: probability contours to be displayed
+  # if showdensmap=T display the density image
+  # if drawpoints=T plot the points outside the maximum contour
+  require(ks)
+  require(magicaxis)
+  kd=kde(cbind(x,y), gridsize = gridsize, verbose = F)
+  im=list(x=kd$eval.points[[1]], y=kd$eval.points[[2]],z=kd$estimate)
+  magplot(range(x), range(y), pch='', grid=F, side=1:4, las=1,
+          labels=labels,...)
+  if(showdensmap){
+    magimage(im, col=rev(grey((0:1000)/1000)), add=T, magmap=F)
+    magaxis(1:4, labels=c(0,0,0,0),...)
+  }
+  if(drawpoints){
+    require(sp)
+    cl=contourLines(im, level=kd$cont[max(cont)])
+    pip=point.in.polygon(x,y,cl[[1]]$x, cl[[1]]$y)
+    points(x[pip==0], y[pip==0], pch='.', col='gray50')
+  }
+  for(i in 1:length(cont))
+    plot(kd, cont=cont[i], add=T, lwd=2, lty=i, drawlabels=F, col=1)
+  #points(mean(x),mean(y),pch=3,col='white')
+}
+
+# create corner plot of MCMC chains
+cornerplot=function(chains, samples=NULL, labels=NULL, histbins=30, lim=NULL, 
+                    gridsize=30, cont=c(.68,.95), ci=c(.16,.84), minorn=2, 
+                    drawpoints=F,...){
+  # chains: matrix or data.frame where columns corresponds to parameters val.
+  # samples: integer giving the number of items to choose from the chains
+  # labels: optional names for the parameters (expressions or characters),
+  #         if NULL (default), uses the column names
+  # histbins: number of bins for the histograms
+  # lim: the level of sigma clipping used to cut the chains (from magclip)
+  #      if NULL (default), no action is done
+  # gridsize: squared bins of the density image
+  # cont: probability contours to be displayed
+  # ci: confidence interval to be displayed on the histograms, 
+  #     also used to display as the intervals of the median values over plots
+  # minorn: number of minor-axis divisions (to improve aesthetics)
+  # if drawpoints=T plot the points outside the maximum contour
+  Npar=ncol(chains)
+  parnames=colnames(chains)
+  if(is.null(parnames)) parnames=paste0('x',1:Npar)
+  if(is.null(labels))
+    labels=parnames
+  N=nrow(chains)
+  if(Npar <= 1) 
+    stop("Need 2+ parameters!")
+  if(!is.null(samples))
+    chains=chains[sample.int(N,samples),]
+  mdvec=apply(chains, 2, median)
+  qvec=apply(chains, 2, quantile, ci)
+  bqs=vector('list', len=Npar)
+  for(i in 1:Npar){
+    lbi=labels[i][[1]]
+    med=sprintf('%.3f', round(mdvec[i],3))
+    lwr=sprintf('%.3f', round(qvec[1,i],3))
+    upr=sprintf('%.3f', round(qvec[2,i],3))
+    bqs[[i]]=bquote(.(lbi)==.(med)[paste('-',.(lwr))]^{paste('+',.(upr))})
+  }
+  if(!is.null(lim)){
+    clpch=apply(chains,2, function(x) magclip(x, lim))
+    clips=sapply(clpch, function(x) x$clip)
+    chains=chains[apply(clips,1,all),]
+  }
+  op=par(mfrow=c(Npar,Npar), mai=rep(.03,4), oma=c(3.5,3.5,1.5,1.5), 
+         family='serif')
+  for (i in 1:Npar){
+    for (j in 1:Npar){
+      if (i < j){
+        plot.new(); next
+      } 
+      if (i == j){
+        lb=c(0,0,0,0)
+        #if(j==1) lb=c(0,1,0,0)
+        if(j==Npar) lb=c(1,0,0,0)
+        xlab=ifelse(lb[1]==1, labels[j], '')
+        bh=mcmc_hist(chains[,j], labels=lb, freq=F, lwd=1, xlab=xlab, 
+                     minorn=minorn, family='serif', nbins=histbins)
+        mtext(bqs[[j]], cex=.8)
+        fi=findInterval(qvec[,j], bh$breaks)
+        polyx=c(rep(qvec[1,j],2),bh$breaks[(fi[1]+1):(fi[2])],rep(qvec[2,j],2))
+        polyy=c(0,bh$counts[(fi[1]+1)],bh$counts[(fi[1]+1):(fi[2]+1)],0)
+        polygon(polyx, polyy, col="#FF00004D", border = NA)
+        abline(v=mdvec[j], col='red')
+      }
+      if (i > j){
+        lb=c(0,0,0,0)
+        if(j==1) lb[2]=1
+        if(i==Npar) lb[1]=1
+        xlab=ifelse(lb[1]==1, labels[j], '')
+        ylab=ifelse(lb[2]==1, labels[i], '')
+        mcmc_plot(chains[,j],chains[,i], labels=lb, xlab=xlab, ylab=ylab, 
+                  minorn=minorn, family='serif', gridsize=gridsize,
+                  drawpoints=drawpoints, cont=cont*100)
+        abline(v=mdvec[j], h=mdvec[i], col='red')
+      }
+    }
+  }
+  par(op)
+}
+
+# draw high density interval for a linear model from MCMC samples of a and b
+mcmc_lm_ci=function(a, b, level=0.68, gridsize=300, samples=NULL, poly.lim=NULL, 
+                    poly.col='gray', mod.col='black', plot=T){
+  # a: MCMC chains of the intercept
+  # b: MCMC chains of the slope
+  # level: CI level to be plotted
+  # gridsize: size of the grid for the kernel density estimation
+  # samples: number of uniform samples for a and b (to reduce runtime);
+  #          if NULL, no draws are taken
+  # poly.lim: range of x values to draw the CI polygon in the existing plot
+  # poly.col: CI color
+  # mod.col: model (line) color
+  require(ks)
+  require(sp)
+  if(is.null(poly.lim)){
+    usr=par('usr')
+    poly.lim=c(usr[1]-0.01,usr[2]+0.01)
+  }else{
+    stopifnot(is.vector(poly.lim), length(poly.lim)==2)
+  }
+  xy=cbind(a, b)
+  if(!is.null(samples) & is.numeric(samples) & length(samples)==1)
+    xy=xy[sample.int(nrow(xy), samples),]
+  mx=median(xy[,1])
+  my=median(xy[,2])
+  kd=kde(xy, gridsize=gridsize, verbose=F)
+  im=list(x=kd$eval.points[[1]], y=kd$eval.points[[2]], z=kd$estimate)
+  lev=level*100
+  cl1=contourLines(im, level=kd$cont[lev])
+  cl2=contourLines(im, level=kd$cont[lev-.05])
+  rm(kd)
+  if(length(cl1)>1){
+    lcl1=unlist(lapply(cl1, function(x) length(x$x)))
+    cl1=cl1[order(lcl1, decreasing=T)[1]]
+    warning('Several contours was found for the inner limit, taken the larger')
+  }
+  if(length(cl2)>1){
+    lcl2=unlist(lapply(cl2, function(x) length(x$x)))
+    cl2=cl2[order(lcl1, decreasing=T)[1]]
+    warning('Several contours was found for the outer limit, taken the larger')
+  }
+  pip=point.in.polygon(xy[,1], xy[,2], cl2[[1]]$x, cl2[[1]]$y)
+  xy=xy[pip==0,]
+  pip=point.in.polygon(xy[,1], xy[,2], cl1[[1]]$x, cl1[[1]]$y)
+  xy=xy[pip==1,]
+  rm(pip)
+  xseq=seq(poly.lim[1], poly.lim[2], len=100)
+  if(nrow(xy)>1000)
+    xy=xy[sample.int(nrow(xy), 1000),]
+  f=function(x) {x[2]*xseq+x[1]}
+  ap=apply(xy, 1, f)
+  ap=apply(ap, 1, range)
+  df=data.frame(x=xseq, y=xseq*my+mx, lwr=ap[1,], upr=ap[2,])
+  if(plot){
+    polygon(c(df$x,rev(df$x)), c(df$lwr,rev(df$upr)), col=poly.col, border=NA)
+    abline(mx, my, col=mod.col)
+  }
+  rm(xy)
+  return(df)
+}
+
+# galaxy compactness following several criteria
+galcomp=function(ref, logmass, ba){
+  # ref: effective radius in kpc
+  # logmass: logarithm of galaxy stellar mass
+  # ba: b/a axis ratio
+  # The criteria are from Poggianti et al. (2013), Barro et al. (2014).
+  # van der Wel et al. (2014) and van Dokkum et al. (2015).
+  # logmass limits: P13 (>10.48), B14 (>10), vdW14 (10.7), vD15 (10.6)
+  Rec=ref*sqrt(ba)
+  mass=10^logmass
+  mrat=mass/10^11
+  c0=0.5*mass/(pi*Rec^2)    #P13
+  c1=log10(mass/Rec^(1/5))  #B14
+  c2=ref/mrat^0.75          #vdW14
+  c3=Rec/mrat               #vD15
+  df=data.frame(P13=log10(c0),B14=c1,vdW14=log10(c2),vD15=log10(c3))
+  df=round(df,5)
+  return(df)
+}
+
+# centering color palette at a certain value x0 from a vector
+# useful for color scales for the z variable in 2D binned images
+scalepal=function(x, x0, pal, xlim=NULL){
+  if(is.null(xlim)) xlim=range(x, na.rm = T)
+  stopifnot(x0>xlim[1], x0<xlim[2])
+  n=length(pal)
+  x=seq(xlim[1], xlim[2], len=n)
+  ncen=round(n/2)
+  ninf=length(x[x<x0])
+  nsup=n-ninf
+  cR1=colorRampPalette(pal[1:ncen])(ninf)
+  cR2=colorRampPalette(pal[ncen:n])(nsup)
+  scaled_pal=c(cR1, cR2)
+  return(scaled_pal)
+}
+
+# Quick vlos normality check following Roberts & Parker (2017) recipe
+normqt=function(x){
+  require(nortest)
+  require(diptest)
+  a=ad.test(x)
+  d=dip.test(x)
+  r=ifelse(a$p.value>=0.05 & d$p.value>=0.05, 'Gaussian', 'Non-Gaussian')
+  df=data.frame(p_AD=a$p.value, p_dip=d$p.value, A=a$statistic, 
+                D=d$statistic, diagnostic=r, row.names=NULL)
+  return(df)
 }

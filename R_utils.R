@@ -73,6 +73,7 @@ abline(h=axTicks(2), v=axTicks(1), col="#FFFFFF")
 # convertir dataframe a formato latex
 xtable::xtable(data)
 knitr::kable(data, format = 'latex')
+Hmisc::format.df()
 
 # Ejemplos de textos y etiquetas
 mtext(text = expression(hat(F)[n](x)), side = 2, line = 2.5)
@@ -122,7 +123,7 @@ data[is.na(data)]=0
 data[data == "null"]="-99"
 
 # When you want to replace NAs by "-99" in a factor
-facna =addNA(factor)
+facna=addNA(factor)
 levels(facna)=c(levels(factor), "-99")
 factor=facna
 
@@ -177,6 +178,15 @@ ggsave("fonttest-win.png") # For saving the PNG plot
 # fr example: C:\Programas\R-3.6.1\library\fontcm\fonts\outlines
 # you can also try this:
 embedFonts(file, fontpaths=file.path(system.file(package="fontcm"), "fonts/outlines"))
+
+# Using any TTF font in R
+# 1 - Download the ttf fonts to a directory (e.g., dir) and import the fonts:
+require(extrafont)
+ttf_import('dir')
+# 2 - Verify that the fonts are registered for embedding:
+fonts()
+# 3 - Register the font database with R
+loadfonts(device = 'win')
 
 # Import packages from one R distribution to another
 tmp = installed.packages()
@@ -373,7 +383,7 @@ scales::show_col(hcl.colors(5)) #display hex code
 unikn::seecol(hcl.colors(5)) # display hex & RGB codes
 
 #--- parameters for plotting -----
-par(mai=c(0.65,0.65,0.2,0.2), mfrow=c(1,1)) #(6 x 6)
+par(mai=c(0.65,0.65,0.2,0.2)) #(6 x 6)
 par(mai=c(0.65,0.65,0.1,0.1), mfrow=c(2,2)) #(7 x 7) 
 par(mai=c(0,0,0,0), oma=c(3.8,3.8,1,1), mfrow=c(2,2)) #(7 x 7) merged panels
 par(mai=c(0.6,0.6,0.1,0.1), mfrow=c(3,2)) #(6 x 8)
@@ -398,7 +408,7 @@ gm_create_draft(test_email)
 gm_send_message(test_email)
 
 # Display a Progress Bar
-pb=txtProgressBar(0, N, style=3)
+pb=txtProgressBar(0, n, style=3)
 setTxtProgressBar(pb, i)
 close(pb)
 
@@ -432,3 +442,39 @@ magplot(d1, las=1, labels=c(0,1,0,0), side=1:4, grid=T, xlim=range(x1),
 magplot(d2$y, d2$x, type='l', las=1, labels=c(1,0,0,0), side=1:4, grid=T, 
         ylim=range(x2), xlab='Density', cex.lab=.8, cex.axis=1.1)
 
+# Display text information in a graphics plot.
+gplots::textplot(version)
+PerformanceAnalytics::textplot(head(mtcars))
+
+# copy graphics to a pdf file
+dev.copy2pdf()
+
+# Replace specified values with new values, in a vector or factor
+plyr::mapvalues(x, from, to)
+
+# Modification of the plotting code in the igraph R package 
+# to accommodate multiple arrow size settings
+source("https://github.com/jevansbio/igraphhack/blob/master/igraphplot2.R")
+environment(plot.igraph2) <- asNamespace('igraph')
+environment(igraph.Arrows2) <- asNamespace('igraph')
+plot.igraph2(g2,edge.arrow.size=E(g2)$weight/max(E(g2)$weight)/2,
+             edge.arrow.width=E(g2)$weight/max(E(g2)$weight))
+
+# Useful mathematical expressions in astronomy
+e=expression(log(M['*']/M[sun])) # stellar mass
+e=expression(log(SSFR/yr^{-1})) # SSFR
+e=expression(Delta(g-i)) # color gradient
+e=expression(paste(D[n],4000)) # Dn4000
+e=expression(log(R[P]/kpc)) # Petrosian radius
+e=expression(log(Sigma/Mpc^{-2})) # projected local density
+e=expression(log(Sigma[1]/M[sun]~kpc^{-2})) # Sigma_1
+e=expression(log(paste(Delta,Sigma[1])/paste(M['sun'],kpc^{-2}))) # Delta Sigma_1
+
+# Create a Data Frame from all Combinations of Factor Variables
+expand.grid()
+
+# Adjust Colors in One or More Directions Conveniently
+adjustcolor("red", alpha.f=0.2)
+
+# Filled contours over an existing scatter plot
+genridge::contourf() # set col='#FFFFFF00' to remove contour border color

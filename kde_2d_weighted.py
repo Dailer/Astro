@@ -264,8 +264,7 @@ class gaussian_kde(object):
             self._bw_method = bw_method
             self.covariance_factor = lambda: self._bw_method(self)
         else:
-            msg = "`bw_method` should be 'scott', 'silverman', a scalar " \
-                  "or a callable."
+            msg = "`bw_method` should be 'scott', 'silverman', a scalar or a callable."
             raise ValueError(msg)
 
         self._compute_covariance()

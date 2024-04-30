@@ -1295,6 +1295,7 @@ getpixscale=function (header, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1)
   }
   return(3600 * (sqrt(CD1_1^2 + CD1_2^2) + sqrt(CD2_1^2 + CD2_2^2))/2)
 }
+
 radec2xy=function (RA, Dec, header, CRVAL1 = 0, CRVAL2 = 0, CRPIX1 = 0, 
                    CRPIX2 = 0, CD1_1 = 1, CD1_2 = 0, CD2_1 = 0, CD2_2 = 1, CTYPE1 = "RA--TAN", 
                    CTYPE2 = "DEC--TAN") 

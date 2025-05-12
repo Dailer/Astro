@@ -1,4 +1,5 @@
 ##### USEFUL FUNCTIONS TO DOWNLOAD AND DISPLAY GALAXY SDSS IMAGES #####
+# The functions were obtained from the files in https://cran.r-project.org/src/contrib/Archive/magicaxis/magicaxis_2.0.10.tar.gz
 
 magcutoutWCS=function(image, header, loc, box = c(100, 100), shiftloc=FALSE, paddim=TRUE, plot = FALSE, CRVAL1=0, CRVAL2=0, CRPIX1=0, CRPIX2=0, CD1_1=1, CD1_2=0, CD2_1=0, CD2_2=1, coord.type='deg', sep=':', loc.type=c('coord','coord'), approx.map=FALSE, ...){
   if(length(loc.type)==1){loc.type=rep(loc.type,2)}

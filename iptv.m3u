@@ -1,28 +1,16 @@
 #EXTM3U
 #EXTINF:-1 tvg-chno="162" tvg-name="ESPN HD es" group-title="TV",ESPN HD es
 http://45.5.119.43:4000/play/a052/index.m3u8
-#EXTINF:-1 tvg-chno="163" tvg-name="ESPN SD es" group-title="TV",ESPN SD es
-http://38.49.128.38:8000/play/a092/index.m3u8
 #EXTINF:-1 tvg-chno="164" tvg-name="ESPN 2 HD es" group-title="TV",ESPN 2 HD es
 http://45.5.119.43:4000/play/a053/index.m3u8
-#EXTINF:-1 tvg-chno="165" tvg-name="ESPN 2 SD es" group-title="TV",ESPN 2 SD es
-http://38.49.128.38:8000/play/a091/index.m3u8
 #EXTINF:-1 tvg-chno="166" tvg-name="ESPN 3 HD es" group-title="TV",ESPN 3 HD es
 http://45.5.119.43:4000/play/a054/index.m3u8
-#EXTINF:-1 tvg-chno="167" tvg-name="ESPN 3 SD es" group-title="TV",ESPN 3 SD es
-http://38.49.128.38:8000/play/a0c3/index.m3u8
 #EXTINF:-1 tvg-chno="168" tvg-name="ESPN 4 HD es" group-title="TV",ESPN 4 HD es
 http://45.5.119.43:4000/play/a028/index.m3u8
-#EXTINF:-1 tvg-chno="169" tvg-name="ESPN 4 SD es" group-title="TV",ESPN 4 SD es
-http://38.49.128.38:8000/play/a0kf/index.m3u8
 #EXTINF:-1 tvg-chno="170" tvg-name="ESPN 5 HD es" group-title="TV",ESPN 5 HD es
 http://45.5.119.43:4000/play/a0ix/index.m3u8
-#EXTINF:-1 tvg-chno="171" tvg-name="ESPN 5 SD es" group-title="TV",ESPN 5 SD es
-http://38.41.8.1:8000/play/a07b?checkedby:alliptvlinks.com
 #EXTINF:-1 tvg-chno="172" tvg-name="ESPN 6 HD es" group-title="TV",ESPN 6 HD es
 http://45.5.119.43:4000/play/a0kj/index.m3u8
-#EXTINF:-1, tvg-chno="173" tvg tvg-chno="1" -name="ESPN 7 SD es" group-title="TV",ESPN 7 SD es
-http://181.78.74.226:45000/play/a01r
 
 #EXTINF:-1 tvg-chno="175" tvg-name="FOX Deportes (tubi)" group-title="TV",FOX Deportes (tubi)
 https://live-manifest.production-public.tubi.io/live/d906efca-1302-4e29-b0d9-9a1d7a305d69/playlist.m3u8
@@ -546,5 +534,17 @@ http://23.237.104.106:8080/USA_WE_TV/index.m3u8
 https://starshare.st/live/P4B9TB9xR8/humongous2tonight/215.ts
 
 #EXTINF:-1 tvg-chno="161" tvg-id="Yes.Network.us2" tvg-name="YES Network" tvg-logo="http://schedulesdirect-api20141201-logos.s3.dualstack.us-east-1.amazonaws.com/stationLogos/s30017_dark_360w_270h.png" group-title="TV",YES Network
-
 http://23.237.104.106:8080/USA_YES_NETWORK/index.m3u8
+
+#EXTINF:-1 tvg-chno="163" tvg-name="ESPN SD es" group-title="TV",ESPN SD es
+http://38.49.128.38:8000/play/a092/index.m3u8
+#EXTINF:-1 tvg-chno="165" tvg-name="ESPN 2 SD es" group-title="TV",ESPN 2 SD es
+http://38.49.128.38:8000/play/a091/index.m3u8
+#EXTINF:-1 tvg-chno="167" tvg-name="ESPN 3 SD es" group-title="TV",ESPN 3 SD es
+http://38.49.128.38:8000/play/a0c3/index.m3u8
+#EXTINF:-1 tvg-chno="169" tvg-name="ESPN 4 SD es" group-title="TV",ESPN 4 SD es
+http://38.49.128.38:8000/play/a0kf/index.m3u8
+#EXTINF:-1 tvg-chno="171" tvg-name="ESPN 5 SD es" group-title="TV",ESPN 5 SD es
+http://38.41.8.1:8000/play/a07b?checkedby:alliptvlinks.com
+#EXTINF:-1, tvg-chno="173" tvg tvg-chno="1" -name="ESPN 7 SD es" group-title="TV",ESPN 7 SD es
+http://181.78.74.226:45000/play/a01r

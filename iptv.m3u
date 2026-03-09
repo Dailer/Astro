@@ -19,15 +19,15 @@ http://186.151.95.60:8000/play/a05r/index.m3u8
 #EXTINF:-1 tvg-chno="176" tvg-name="FOX Deportes (2) HD" group-title="TV",FOX Deportes (2) HD
 http://45.189.151.7:8000/play/a06m
 
-#EXTINF:-1 tvg-chno="178" tvg-name="DISCOVERY CHANNEL HD es" group-title="TV",DISCOVERY CHANNEL HD es
+#EXTINF:-1 tvg-chno="178" tvg-name="DISCOVERY CHANNEL HD español" group-title="TV",DISCOVERY CHANNEL HD español
 http://45.5.116.178:8000/play/a05s/index.m3u8
-#EXTINF:-1 tvg-chno="179" tvg-name="HISTORY CHANNEL HD es" group-title="TV",HISTORY CHANNEL HD es
+#EXTINF:-1 tvg-chno="179" tvg-name="HISTORY CHANNEL HD español" group-title="TV",HISTORY CHANNEL HD español
 http://190.0.247.38:8000/play/a04q
-#EXTINF:-1 tvg-chno="180" tvg-name="HISTORY CHANNEL 2 HD es" group-title="TV",HISTORY CHANNEL 2 HD es
+#EXTINF:-1 tvg-chno="180" tvg-name="HISTORY CHANNEL 2 HD español" group-title="TV",HISTORY CHANNEL 2 HD español
 http://190.0.247.38:8000/play/a04r
-#EXTINF:-1 tvg-chno="181" tvg-name="HISTORY CHANNEL 2 es" group-title="TV",HISTORY CHANNEL 2 es
+#EXTINF:-1 tvg-chno="181" tvg-name="HISTORY CHANNEL 2 español" group-title="TV",HISTORY CHANNEL 2 español
 http://38.49.128.38:8000/play/a0dj/index.m3u8
-#EXTINF:-1 tvg-chno="182" tvg-name="National Geographic es (CO)" group-title="TV",National Geographic es (CO)
+#EXTINF:-1 tvg-chno="182" tvg-name="National Geographic español (CO)" group-title="TV",National Geographic español (CO)
 http://181.205.130.194:4000/play/a0fa
 
 #EXTINF:-1 tvg-chno="177" tvg-name="EL 9 SD" group-title="TV1",EL 9 SD
@@ -548,5 +548,6 @@ http://38.49.128.38:8000/play/a0kf/index.m3u8
 http://38.41.8.1:8000/play/a07b?checkedby:alliptvlinks.com
 #EXTINF:-1, tvg-chno="173" tvg tvg-chno="1" -name="ESPN 7 SD español" group-title="TV",ESPN 7 SD español
 http://181.78.74.226:45000/play/a01r
+
 
 

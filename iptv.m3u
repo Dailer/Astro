@@ -1,7 +1,7 @@
 #EXTM3U
-#EXTINF:-1 tvg-chno="178" tvg-name="ADN 40 HD (1)" group-title="TV",ADN 40 HD
+#EXTINF:-1 tvg-chno="178" tvg-name="ADN 40 HD (1)" group-title="TV",ADN 40 HD (1)
 https://mdstrm.com/live-stream-playlist/60b578b060947317de7b57ac.m3u8
-#EXTINF:-1 tvg-chno="178" tvg-name="ADN 40 HD (2)" group-title="TV",ADN 40 HD
+#EXTINF:-1 tvg-chno="178" tvg-name="ADN 40 HD (2)" group-title="TV",ADN 40 HD (2)
 http://38.49.128.38:8000/play/a0ne/index.m3u8
 #EXTINF:-1 tvg-chno="178" tvg-name="AYM SPORT HD" group-title="TV",AYM SPORT HD
 http://38.49.128.38:8000/play/a0mk/index.m3u8
@@ -590,6 +590,7 @@ http://38.49.128.38:8000/play/a0kf/index.m3u8
 http://38.41.8.1:8000/play/a07b?checkedby:alliptvlinks.com
 #EXTINF:-1, tvg-chno="173" tvg tvg-chno="1" -name="ESPN 7 SD español" group-title="TV",ESPN 7 SD español
 http://181.78.74.226:45000/play/a01r
+
 
 
 

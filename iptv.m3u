@@ -1,4 +1,34 @@
 #EXTM3U
+#EXTINF:-1 tvg-chno="178" tvg-name="ADN 40 HD (1)" group-title="TV",ADN 40 HD
+https://mdstrm.com/live-stream-playlist/60b578b060947317de7b57ac.m3u8
+#EXTINF:-1 tvg-chno="178" tvg-name="ADN 40 HD (2)" group-title="TV",ADN 40 HD
+http://38.49.128.38:8000/play/a0ne/index.m3u8
+#EXTINF:-1 tvg-chno="178" tvg-name="AYM SPORT HD" group-title="TV",AYM SPORT HD
+http://38.49.128.38:8000/play/a0mk/index.m3u8
+#EXTINF:-1 tvg-chno="178" tvg-name="AZTECA UNO HD" group-title="TV",AZTECA UNO HD
+https://mdstrm.com/live-stream-playlist/609b243156cca108312822a6.m3u8
+#EXTINF:-1 tvg-chno="178" tvg-name="AZTECA 7 HD (1)" group-title="TV",AZTECA 7 HD
+https://mdstrm.com/live-stream-playlist/609ad46a7a441137107d7a81.m3u8
+#EXTINF:-1 tvg-chno="178" tvg-name="AZTECA 7 HD (2)" group-title="TV",AZTECA 7 HD
+http://38.49.128.38:8000/play/a0la/index.m3u8
+#EXTINF:-1 tvg-chno="178" tvg-name="AZTECA INTER HD" group-title="TV",AZTECA INTER HD
+http://38.49.128.38:8000/play/a0n7/index.m3u8
+#EXTINF:-1 tvg-chno="178" tvg-name="AZTECA 7.2" group-title="TV",AZTECA 7.2
+https://mdstrm.com/live-stream-playlist/60b56be1000ea50835fa1e63.m3u8
+#EXTINF:-1 tvg-chno="178" tvg-name="CANAL 5 HD" group-title="TV",CANAL 5 HD
+http://38.49.128.38:8000/play/a0n6/index.m3u8
+#EXTINF:-1 tvg-chno="178" tvg-name="CANAL 26 AGUASCALIENTES HD" group-title="TV",CANAL 26 AGUASCALIENTES HD
+http://streamingcws10.com:1935/telemetrika3/videotelemetrika3/.m3u8
+#EXTINF:-1 tvg-chno="178" tvg-name="CLICK HD" group-title="TV",CLICK HD
+http://38.49.128.38:8000/play/a0mh/index.m3u8
+#EXTINF:-1 tvg-chno="178" tvg-name="D PELICULA HD" group-title="TV",D PELICULA HD
+http://38.49.128.38:8000/play/a0nn/index.m3u8
+#EXTINF:-1 tvg-chno="178" tvg-name="DISCOVERY CHANNEL HD español" group-title="TV",DISCOVERY CHANNEL HD español
+http://45.5.116.178:8000/play/a05s/index.m3u8
+#EXTINF:-1 tvg-chno="178" tvg-name="DISTRITO COMEDIA HD" group-title="TV",DISTRITO COMEDIA HD
+http://38.49.128.38:8000/play/a0ou/index.m3u8
+#EXTINF:-1 tvg-chno="178" tvg-name="DW HD" group-title="TV",DW HD
+http://38.49.128.38:8000/play/a0nl/index.m3u8
 #EXTINF:-1 tvg-chno="162" tvg-name="ESPN HD español" group-title="TV",ESPN HD español
 http://45.5.119.43:4000/play/a052/index.m3u8
 #EXTINF:-1 tvg-chno="164" tvg-name="ESPN 2 HD español" group-title="TV",ESPN 2 HD español
@@ -11,40 +41,50 @@ http://45.5.119.43:4000/play/a028/index.m3u8
 http://45.5.119.43:4000/play/a0ix/index.m3u8
 #EXTINF:-1 tvg-chno="172" tvg-name="ESPN 6 HD español" group-title="TV",ESPN 6 HD español
 http://45.5.119.43:4000/play/a0kj/index.m3u8
-
-#EXTINF:-1 tvg-chno="175" tvg-name="FOX Deportes (tubi)" group-title="TV",FOX Deportes (tubi)
+#EXTINF:-1 tvg-chno="178" tvg-name="ESTRELLA TV HD" group-title="TV",ESTRELLA TV HD
+https://estrellatv-roku.amagi.tv/playlist.m3u8
+#EXTINF:-1 tvg-chno="178" tvg-name="ESTRELLAS HD" group-title="TV",ESTRELLAS HD
+http://38.49.128.38:8000/play/a0le/index.m3u8
+#EXTINF:-1 tvg-chno="178" tvg-name="El 9 HD" group-title="TV",El 9 HD
+http://38.49.128.38:8000/play/a0ow/index.m3u8
+#EXTINF:-1 tvg-chno="178" tvg-name="FAST FUN HD" group-title="TV",FAST FUN HD
+http://38.49.128.38:8000/play/a0mi/index.m3u8
+#EXTINF:-1 tvg-chno="178" tvg-name="FRANCE 24 HD" group-title="TV",FRANCE 24 HD
+http://38.49.128.38:8000/play/a0nm/index.m3u8
+#EXTINF:-1 tvg-chno="175" tvg-name="FOX DEPORTES (tubi)" group-title="TV",FOX DEPORTES (tubi)
 https://live-manifest.production-public.tubi.io/live/d906efca-1302-4e29-b0d9-9a1d7a305d69/playlist.m3u8
-#EXTINF:-1 tvg-chno="174" tvg-name="FOX Deportes (1) HD" group-title="TV",FOX Deportes (1) HD
+#EXTINF:-1 tvg-chno="174" tvg-name="FOX DEPORTES (1) HD" group-title="TV",FOX DEPORTES (1) HD
 http://186.151.95.60:8000/play/a05r/index.m3u8
-#EXTINF:-1 tvg-chno="176" tvg-name="FOX Deportes (2) HD" group-title="TV",FOX Deportes (2) HD
+#EXTINF:-1 tvg-chno="176" tvg-name="FOX DEPORTES (2) HD" group-title="TV",FOX DEPORTES (2) HD
 http://45.189.151.7:8000/play/a06m
-
-#EXTINF:-1 tvg-chno="178" tvg-name="DISCOVERY CHANNEL HD español" group-title="TV",DISCOVERY CHANNEL HD español
-http://45.5.116.178:8000/play/a05s/index.m3u8
 #EXTINF:-1 tvg-chno="179" tvg-name="HISTORY CHANNEL HD español" group-title="TV",HISTORY CHANNEL HD español
 http://190.0.247.38:8000/play/a04q
 #EXTINF:-1 tvg-chno="180" tvg-name="HISTORY CHANNEL 2 HD español" group-title="TV",HISTORY CHANNEL 2 HD español
 http://190.0.247.38:8000/play/a04r
 #EXTINF:-1 tvg-chno="181" tvg-name="HISTORY CHANNEL 2 español" group-title="TV",HISTORY CHANNEL 2 español
 http://38.49.128.38:8000/play/a0dj/index.m3u8
-#EXTINF:-1 tvg-chno="182" tvg-name="National Geographic español (CO)" group-title="TV",National Geographic español (CO)
+#EXTINF:-1 tvg-chno="178" tvg-name="LOCOMOTION HD" group-title="TV",LOCOMOTION HD
+http://51.222.85.85:81/hls/loco/index.m3u8
+#EXTINF:-1 tvg-chno="178" tvg-name="MULTIMEDIOS MTY HD" group-title="TV",MULTIMEDIOS MTY HD
+https://mdstrm.com/live-stream-playlist/57b4dbf5dbbfc8f16bb63ce1.m3u8
+#EXTINF:-1 tvg-chno="182" tvg-name="NATIONAL GEOGRAPHIC español (CO)" group-title="TV",ATIONAL GEOGRAPHIC español (CO)
 http://181.205.130.194:4000/play/a0fa
-
-#EXTINF:-1 tvg-chno="177" tvg-name="EL 9 SD" group-title="TV1",EL 9 SD
-http://38.49.128.38:8000/play/a0ow/index.m3u8
-#EXTINF:-1 tvg-chno="183" tvg-name="ADN 40 HD" group-title="TV",ADN 40 HD
-http://38.49.128.38:8000/play/a0ne/index.m3u8
-#EXTINF:-1 tvg-chno="184" tvg-name="AZTECA 7 HD" group-title="TV",AZTECA 7 HD
-http://38.49.128.38:8000/play/a0la/index.m3u8
-#EXTINF:-1 tvg-chno="185" tvg-name="CANAL 5 HD" group-title="TV",CANAL 5 HD
-http://38.49.128.38:8000/play/a0n6/index.m3u8
-#EXTINF:-1 tvg-chno="186" tvg-name="TELEMUNDO INTER HD" group-title="TV",TELEMUNDO INTER HD
+#EXTINF:-1 tvg-chno="178" tvg-name="RCN HD" group-title="TV",RCN HD
+https://rcntv-rcnmas-1-us.plex.wurl.tv/playlist.m3u8
+#EXTINF:-1 tvg-chno="178" tvg-name="REALITIES HD" group-title="TV",REALITIES HD
+http://38.49.128.38:8000/play/a0nj/index.m3u8
+#EXTINF:-1 tvg-chno="178" tvg-name="RT HD" group-title="TV",RT HD
+http://38.49.128.38:8000/play/a0nk/index.m3u8
+#EXTINF:-1 tvg-chno="178" tvg-name="TELEMUNDO INTER HD" group-title="TV",TELEMUNDO INTER HD
 http://38.49.128.38:8000/play/a0mg/index.m3u8
-#EXTINF:-1 tvg-chno="187" tvg-name="CARTOON NETWORK SD" group-title="TV",CARTOON NETWORK SD
-http://38.49.128.38:8000/play/a0c0/index.m3u8
-#EXTINF:-1 tvg-chno="188" tvg-name="ESTRELLAS HD" group-title="TV",ESTRELLAS HD
-http://38.49.128.38:8000/play/a0le/index.m3u8
-
+#EXTINF:-1 tvg-chno="178" tvg-name="TELEMUNDO PUERTO RICO HD" group-title="TV",TELEMUNDO PUERTO RICO HD
+https://nbculocallive.akamaized.net/hls/live/2037499/puertorico/stream1/master.m3u8
+#EXTINF:-1 tvg-chno="178" tvg-name="TELESERIES HD" group-title="TV",TELESERIES HD
+http://38.49.128.38:8000/play/a0ni/index.m3u8
+#EXTINF:-1 tvg-chno="178" tvg-name="TVC DEPORTES HD" group-title="TV",TVC DEPORTES HD
+http://38.49.128.38:8000/play/a0mj/index.m3u8
+#EXTINF:-1 tvg-chno="178" tvg-name="UNICABLE HD" group-title="TV",UNICABLE HD
+http://38.49.128.38:8000/play/a0ov/index.m3u8
 
 
 #EXTINF:-1 tvg-chno="189" tvg-name="BBC Earth HD" group-title="TV",BBC Earth HD
@@ -548,6 +588,7 @@ http://38.49.128.38:8000/play/a0kf/index.m3u8
 http://38.41.8.1:8000/play/a07b?checkedby:alliptvlinks.com
 #EXTINF:-1, tvg-chno="173" tvg tvg-chno="1" -name="ESPN 7 SD español" group-title="TV",ESPN 7 SD español
 http://181.78.74.226:45000/play/a01r
+
 
 
 

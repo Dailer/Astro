@@ -7,9 +7,9 @@ http://38.49.128.38:8000/play/a0ne/index.m3u8
 http://38.49.128.38:8000/play/a0mk/index.m3u8
 #EXTINF:-1 tvg-chno="178" tvg-name="AZTECA UNO HD" group-title="TV",AZTECA UNO HD
 https://mdstrm.com/live-stream-playlist/609b243156cca108312822a6.m3u8
-#EXTINF:-1 tvg-chno="178" tvg-name="AZTECA 7 HD (1)" group-title="TV",AZTECA 7 HD
+#EXTINF:-1 tvg-chno="178" tvg-name="AZTECA 7 HD (1)" group-title="TV",AZTECA 7 HD (1)
 https://mdstrm.com/live-stream-playlist/609ad46a7a441137107d7a81.m3u8
-#EXTINF:-1 tvg-chno="178" tvg-name="AZTECA 7 HD (2)" group-title="TV",AZTECA 7 HD
+#EXTINF:-1 tvg-chno="178" tvg-name="AZTECA 7 HD (2)" group-title="TV",AZTECA 7 HD (2)
 http://38.49.128.38:8000/play/a0la/index.m3u8
 #EXTINF:-1 tvg-chno="178" tvg-name="AZTECA INTER HD" group-title="TV",AZTECA INTER HD
 http://38.49.128.38:8000/play/a0n7/index.m3u8
@@ -67,7 +67,7 @@ http://38.49.128.38:8000/play/a0dj/index.m3u8
 http://51.222.85.85:81/hls/loco/index.m3u8
 #EXTINF:-1 tvg-chno="178" tvg-name="MULTIMEDIOS MTY HD" group-title="TV",MULTIMEDIOS MTY HD
 https://mdstrm.com/live-stream-playlist/57b4dbf5dbbfc8f16bb63ce1.m3u8
-#EXTINF:-1 tvg-chno="182" tvg-name="NATIONAL GEOGRAPHIC español (CO)" group-title="TV",ATIONAL GEOGRAPHIC español (CO)
+#EXTINF:-1 tvg-chno="182" tvg-name="NATIONAL GEOGRAPHIC español (CO)" group-title="TV",NATIONAL GEOGRAPHIC español (CO)
 http://181.205.130.194:4000/play/a0fa
 #EXTINF:-1 tvg-chno="178" tvg-name="RCN HD" group-title="TV",RCN HD
 https://rcntv-rcnmas-1-us.plex.wurl.tv/playlist.m3u8
@@ -588,6 +588,7 @@ http://38.49.128.38:8000/play/a0kf/index.m3u8
 http://38.41.8.1:8000/play/a07b?checkedby:alliptvlinks.com
 #EXTINF:-1, tvg-chno="173" tvg tvg-chno="1" -name="ESPN 7 SD español" group-title="TV",ESPN 7 SD español
 http://181.78.74.226:45000/play/a01r
+
 
 
 

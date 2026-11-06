@@ -117,22 +117,23 @@ stocks_extra=c(
   # Índices grandes que faltaban
   'BRK-B','ILMN','ALGN','WBD','ZM','MDB','OKTA','ENPH','LCID','NRG','PODD','SYF','ALLY','CBOE','LPLA',
   # Crecimiento / favoritas de retail
-  'SOFI','HOOD','AFRM','UPST','RIVN','HIMS','RDDT','CAVA','ONON','TOST','CVNA','DKNG','CHWY','ETSY',
+  'SOFI','HOOD','AFRM','UPST','RIVN','HIMS','CAVA','ONON','TOST','CVNA','DKNG','CHWY','ETSY',
   'PINS','SNAP','LYFT','W','AMC','DJT','TLRY','CGC','OPEN','DUOL','CELH','PLUG','XYZ','S','PATH',
-  'AI','BBAI','TEM','ASAN','CART','GRAB','FUTU','LI','XPEV','BILI','BEKE','YUMC','ZTO','BB',
+  'AI','BBAI','ASAN','CART','GRAB','FUTU','LI','XPEV','BILI','BEKE','YUMC','ZTO','BB',
   # IA, cuántica, espacio y nuclear
-  'IONQ','RGTI','QBTS','SOUN','RKLB','LUNR','ASTS','JOBY','ACHR','SMR','OKLO','NNE','CCJ','UEC',
-  'LEU','NXE','DNN','CRWV','NBIS',
+  'IONQ','RGTI','QBTS','SOUN','RKLB','LUNR','ASTS','JOBY','ACHR','SMR','OKLO','CCJ','UEC',
+  'LEU','NXE','DNN','CRWV',
   # Cripto-relacionadas
   'MARA','RIOT','CLSK','CIFR','HUT','IREN','WULF','CORZ','BTBT','GLXY','CRCL','BMNR','SBET',
   # Semiconductores y hardware
-  'ALAB','CRDO','COHR','LITE','CIEN','STX','SNDK','TER','ONTO','ENTG','AMKR','SWKS','QRVO',
+  'CRDO','COHR','LITE','CIEN','STX','SNDK','TER','ONTO','ENTG','AMKR','SWKS','QRVO',
   'LSCC','MTSI','RMBS','FORM','ACLS','CLS',
   # Viajes, casinos y aerolíneas
   'CCL','NCLH','UAL','LUV','JBLU','ALK','MGM','WYNN','CZR','PENN',
   # Energía, minería, defensa e infraestructura
   'AA','ALB','APA','EQT','CLF','MP','KGC','PAAS','HL','CDE','AG','GFI','HMY','RGLD','AU','STLD',
   'SQM','HII','AVAV','BWXT','KTOS','EME','FIX','STRL')
+#removed: RDDT, TEM, NNE, NBIS, ALAB
 
 indx=c('BTC-USD','^GSPC','^DJI','^IXIC','^RUT','^VIX','^GSPTSE','^NYA','^XAX',
        '^FTSE','^GDAXI','^FCHI','^STOXX50E','^N100','^BFX','^HSI')

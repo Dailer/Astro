@@ -15,7 +15,7 @@ stocks1=c('BTC-USD','NVDA','TSLA','MSFT','AAPL','AMD','META','AMZN','NOW','SMCI'
          'NVO','MRK','TM','AZN','SAP','SHEL','NVS','TMUS','LIN','ABT','PM',
          'AMGN','INTU','VZ','PDD','HSBC','BX','ISRG','UL','MS','CMCSA','TTE',
          'HDB','SPGI','RY','UNP','LOW','BHP','SNY','TJX','VRTX','PGR',
-         'SYK','BUD','ELV','COP','REGN','PLD','MUFG','SCHW','MMC','RIO','AMT',
+         'SYK','BUD','ELV','COP','REGN','PLD','MUFG','SCHW','RIO','AMT',
          'CB','BSX','ADP','MDT','TD','PANW','IBN','DE','SO','KKR','CI','MDLZ',
          'BP','HCA','INFY','UBS','DUK','MO','PBR','ICE','RELX','CL','MCO',
          'WM','GSK','ZTS','MCK','SMFG','ENB','BTI','GD','RACE','SCCO','SNPS',
@@ -27,27 +27,28 @@ stocks1=c('BTC-USD','NVDA','TSLA','MSFT','AAPL','AMD','META','AMZN','NOW','SMCI'
          'CRH','ET','MNST','CHTR','NU','COF','SRE','O','MFG','WMB','HLT','OXY',
          'AMX','MET','CCI','ADSK','CPRT','PCAR','SPG','DLR','TRV','E',
          'HMC','PCG','DASH','AIG','VLO','KDP','LEN','SU','KMB','D','OKE','ROST',
-         'GWW','ALL','CM','BK','STLA','WCN','KMI','PAYX','ALC','JCI','STZ',
+         'GWW','ALL','CM','STLA','WCN','KMI','PAYX','ALC','JCI','STZ',
          'MFC','TAK','TRP','LYG','VALE','TEL','IQV','HLN','HUM','KHC','LHX',
-         'FTNT','MPLX','MSCI','ODFL','HES','FERG','FIS','CNC','TTD','A','LNG',
+         'FTNT','MPLX','MSCI','ODFL','FERG','FIS','CNC','TTD','A','LNG',
          'HSY','SNOW','AMP','CMI','PRU','EA','FICO','BCS','PEG','KR','EXC',
          'MPWR','IDXX','GIS','FAST','NDAQ','SYY','YUM','VRSK','OTIS',
-         'AEM','TEAM','SQ','ACGL','IT','HWM','CTSH','BSBR','IMO','JD','DOW',
+         'AEM','TEAM','ACGL','IT','HWM','CTSH','BSBR','IMO','JD','DOW',
          'CPNG','NUE','CTVA','DDOG','BKR','AME','IR','PWR','VMC','EFX',
          'ED','MLM','EXR','NWG','SE','CCEP','ALNY','RKT','EL','CBRE','FANG',
          'GLW','CVE','XEL','MRNA','DD','WDS','HPQ','VICI','RMD','ABEV',
-         'DFS','GRMN','HIG','EIX','XYL','GOLD','BCE','IRM','WIT','CSGP','MTD',
-         'LYB','FCNCO','ORAN','BIIB','VEEV','ARGX','AVB','ON','CHT','TRGP','ROK',
+         'GRMN','HIG','EIX','XYL','GOLD','BCE','IRM','WIT','CSGP','MTD',
+         'LYB','FCNCO','BIIB','VEEV','ARGX','AVB','ON','CHT','TRGP','ROK',
          'BRO','PPG','WTW','AWK','WEC','FWONK','FCNCA','FWONA','EBAY',
          'ADM','HAL','CDW','LVS','DB','HEI','SLF','ARES','TSCO','MTB','FITB',
-         'STM','NET','DVN','WAB','NVR','DG','EQR','PHG','PHM','ANSS','ICLR',
-         'WPM','TW','ETR','DAL','ZS','BR','DTE','TCOM','TEF','GFS','VST',
+         'STM','NET','DVN','WAB','NVR','DG','EQR','PHG','PHM','ICLR',
+         'WPM','TW','ETR','DAL','ZS','BR','DTE','TCOM','GFS','VST',
          'TTWO','GIB','CAH','VOD','SBAC','CQP','TU','FE','TYL','IFF','NTAP',
          'GPN','IX','STT','PUK','DOV','CHD','FNV','STE','FTV','HUBS','NTR',
          'TROW','ES','HPE','FMX','ROL','OWL','TECK','WY','KB','VTR','ZBH',
          'ERIC','APP','PPL','RJF','TME','QSR','PBA','KEYS','AXON','AEE','BBD',
-         'DECK','INVH','K','DLTR','TSN','GDDY','MKC','NOK','WRB')
+         'DECK','INVH','DLTR','TSN','GDDY','MKC','NOK','WRB')
 #removed: ARM,FI,BN,COR,GEV*,GEHC,KVUE,FLUT,FER*,VLTO,KSPI*,SW* (could work until 4h interval)
+#also removed: MMC, BK, HES, SQ, DFS, ORAN, ANSS, TEF, K
 #*failing at lower intervals
 
 # More active 100 London stocks, Madrid, Paris, Copenhague, Amsterdam, Brussels and Italy
@@ -111,6 +112,27 @@ stocks2=c('RR.L','RIO.L','LSEG.L','BP.L','SHEL.L','ULVR.L','NG.L','GLEN.L',
 #removed: ICG.L,AYV.PA,EMEIS.PA,FRVIA.PA,LSS.PA,ODET.PA,PARRO.PA,TKO.PA,TKTT.PA,
 #VANTI.PA,VIRI.PA,VU.PA,COLOBC.XC,MAERSKB.CO,NSIS-B.CO,ROCKB.CO,SVITZR.CO,
 #DSFIR.AS,SYENS.BR,LTMC.MI,SCF.MI,NETW.L
+
+stocks_extra=c(
+  # Índices grandes que faltaban
+  'BRK-B','ILMN','ALGN','WBD','ZM','MDB','OKTA','ENPH','LCID','NRG','PODD','SYF','ALLY','CBOE','LPLA',
+  # Crecimiento / favoritas de retail
+  'SOFI','HOOD','AFRM','UPST','RIVN','HIMS','RDDT','CAVA','ONON','TOST','CVNA','DKNG','CHWY','ETSY',
+  'PINS','SNAP','LYFT','W','AMC','DJT','TLRY','CGC','OPEN','DUOL','CELH','PLUG','XYZ','S','PATH',
+  'AI','BBAI','TEM','ASAN','CART','GRAB','FUTU','LI','XPEV','BILI','BEKE','YUMC','ZTO','BB',
+  # IA, cuántica, espacio y nuclear
+  'IONQ','RGTI','QBTS','SOUN','RKLB','LUNR','ASTS','JOBY','ACHR','SMR','OKLO','NNE','CCJ','UEC',
+  'LEU','NXE','DNN','CRWV','NBIS',
+  # Cripto-relacionadas
+  'MARA','RIOT','CLSK','CIFR','HUT','IREN','WULF','CORZ','BTBT','GLXY','CRCL','BMNR','SBET',
+  # Semiconductores y hardware
+  'ALAB','CRDO','COHR','LITE','CIEN','STX','SNDK','TER','ONTO','ENTG','AMKR','SWKS','QRVO',
+  'LSCC','MTSI','RMBS','FORM','ACLS','CLS',
+  # Viajes, casinos y aerolíneas
+  'CCL','NCLH','UAL','LUV','JBLU','ALK','MGM','WYNN','CZR','PENN',
+  # Energía, minería, defensa e infraestructura
+  'AA','ALB','APA','EQT','CLF','MP','KGC','PAAS','HL','CDE','AG','GFI','HMY','RGLD','AU','STLD',
+  'SQM','HII','AVAV','BWXT','KTOS','EME','FIX','STRL')
 
 indx=c('BTC-USD','^GSPC','^DJI','^IXIC','^RUT','^VIX','^GSPTSE','^NYA','^XAX',
        '^FTSE','^GDAXI','^FCHI','^STOXX50E','^N100','^BFX','^HSI')

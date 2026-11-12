@@ -46,7 +46,8 @@ stocks1=c('BTC-USD','NVDA','TSLA','MSFT','AAPL','AMD','META','AMZN','NOW','SMCI'
          'GPN','IX','STT','PUK','DOV','CHD','FNV','STE','FTV','HUBS','NTR',
          'TROW','ES','HPE','FMX','ROL','OWL','TECK','WY','KB','VTR','ZBH',
          'ERIC','APP','PPL','RJF','TME','QSR','PBA','KEYS','AXON','AEE','BBD',
-         'DECK','INVH','DLTR','TSN','GDDY','MKC','NOK','WRB')
+         'DECK','INVH','DLTR','TSN','GDDY','MKC','NOK','WRB',
+          'NBIS','ALAB','BE','RDDT','FLNC','USAR','AAOI','AXTI')
 #removed: ARM,FI,BN,COR,GEV*,GEHC,KVUE,FLUT,FER*,VLTO,KSPI*,SW* (could work until 4h interval)
 #also removed: MMC, BK, HES, SQ, DFS, ORAN, ANSS, TEF, K
 #*failing at lower intervals
